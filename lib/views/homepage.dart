@@ -20,11 +20,13 @@ class _HomepageState extends State<Homepage> {
 
   TextEditingController moneyController = TextEditingController();
   TextEditingController tidController = TextEditingController();
+  TextEditingController swapAmountController = TextEditingController();
 
   FocusNode buttonFocus = FocusNode();
   FocusNode tidFocus = FocusNode();
 
   final _key = GlobalKey<FormState>();
+  final _key2 = GlobalKey<FormState>();
 
   final List<String> paymentMethods = [
     "JazzCash",
@@ -33,7 +35,10 @@ class _HomepageState extends State<Homepage> {
     "SadaPay",
   ];
 
+  final List<String> swapCurrency = ["BTC", "USD", "TON"];
+
   String? selectedMethod;
+  String? selectedCurrency;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +135,12 @@ class _HomepageState extends State<Homepage> {
                   },
                   child: actionCard(Icons.add, "Add Money", Colors.green),
                 ),
-                actionCard(Icons.swap_vert, "Swap", Colors.blue),
+                InkWell(
+                  onTap: () {
+                    swapMoney();
+                  },
+                  child: actionCard(Icons.swap_vert, "Swap", Colors.blue),
+                ),
                 actionCard(Icons.remove_sharp, "Withraw", Colors.red),
                 actionCard(
                   Icons.history,
@@ -187,7 +197,131 @@ class _HomepageState extends State<Homepage> {
       ),
     );
   }
-  
+
+  void swapMoney() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Center(
+            child: Text(
+              "Swap Money",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          content: Form(
+            key: _key2,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                form.signInTf(
+                  controller: swapAmountController,
+                  icon: Icon(Icons.money),
+                  hint: "Enter amount to swap",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Please enter amount to swap!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                DropdownButtonFormField(
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 0,
+                    ),
+                    label: Text('--Select Currency--'),
+                    labelStyle: TextStyle(fontSize: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Color(0xff57C785),
+                      ),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                  ),
+                  value: selectedCurrency,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a currency!';
+                    }
+                    return null;
+                  },
+                  items: swapCurrency.map((currency) {
+                    return DropdownMenuItem(
+                      value: currency,
+                      child: Text(
+                        currency,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {},
+                ),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Exchange Rate:"), Text("280")],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Exchange fee:"), Text("200")],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Swaped amount:"), Text("1200")],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text("Remaining Balance:"), Text("1000")],
+                ),
+                SizedBox(height: 10),
+                form.button(
+                  text: Text("Confirm", style: TextStyle(color: Colors.black)),
+                  onPressed: () {
+                    if (!_key2.currentState!.validate()) {
+                      return;
+                    }
+                    Navigator.pop(context);
+                    Utils().flutterToast(
+                      "Amount Swaped Successfully!",
+                      context,
+                    );
+                    swapAmountController.clear();
+                    selectedCurrency == null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void addMoney() {
     showDialog(

@@ -19,7 +19,6 @@ class CustomWidgets {
       controller: controller,
       obscureText: obsecure,
       style: TextStyle(
-        color: Colors.black,
         fontSize: 14,
         fontWeight: FontWeight.w400,
       ),
