@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pf_project/core/utils.dart';
 import 'package:pf_project/viewmodels/theme_viewmodel.dart';
 import 'package:pf_project/views/SignIn_screen.dart';
 import 'package:pf_project/views/about_app.dart';
 import 'package:pf_project/views/contact_us.dart';
+import 'package:pf_project/views/helper%20%20widgets/custom_widgets.dart';
 import 'package:pf_project/views/privacy_policies.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +16,25 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  CustomWidgets form = CustomWidgets();
+
+  TextEditingController moneyController = TextEditingController();
+  TextEditingController tidController = TextEditingController();
+
+  FocusNode buttonFocus = FocusNode();
+  FocusNode tidFocus = FocusNode();
+
+  final _key = GlobalKey<FormState>();
+
+  final List<String> paymentMethods = [
+    "JazzCash",
+    "EasyPaisa",
+    "NayaPay",
+    "SadaPay",
+  ];
+
+  String? selectedMethod;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,13 +92,25 @@ class _HomepageState extends State<Homepage> {
                   Text("Available Balance", style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
                   Text(
-                    "PKR 0,000",
+                    "PKR 76,000,000",
                     style: TextStyle(fontSize: 38, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 5),
-                  Text(
-                    "Last updated • Just now",
-                    style: TextStyle(fontSize: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Last updated • Just now",
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      SelectableText(
+                        "UID:Px0012",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -91,9 +124,19 @@ class _HomepageState extends State<Homepage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                actionCard(Icons.add, "Add Money", Colors.green),
-                actionCard(Icons.remove, "Withdraw", Colors.red),
-                actionCard(Icons.swap_horiz, "Transfer", Colors.blue),
+                InkWell(
+                  onTap: () {
+                    addMoney();
+                  },
+                  child: actionCard(Icons.add, "Add Money", Colors.green),
+                ),
+                actionCard(Icons.swap_vert, "Swap", Colors.blue),
+                actionCard(Icons.remove_sharp, "Withraw", Colors.red),
+                actionCard(
+                  Icons.history,
+                  "Transactions",
+                  Color.fromARGB(255, 16, 41, 123),
+                ),
               ],
             ),
 
@@ -142,6 +185,131 @@ class _HomepageState extends State<Homepage> {
           ],
         ),
       ),
+    );
+  }
+  
+
+  void addMoney() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Center(
+            child: Text(
+              "Add Money",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          content: Form(
+            key: _key,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                form.signInTf(
+                  controller: moneyController,
+                  icon: Icon(Icons.money),
+                  hint: "Enter amount you sent",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Sent amount is required!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a payment method!';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 0,
+                    ),
+                    label: Text('--Select Payment Method--'),
+                    labelStyle: TextStyle(fontSize: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Color(0xff57C785),
+                      ),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                  ),
+                  value: selectedMethod,
+                  items: paymentMethods.map((method) {
+                    return DropdownMenuItem(
+                      value: method,
+                      child: Text(
+                        method,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {},
+                ),
+                SizedBox(height: 10),
+                form.signInTf(
+                  focus: tidFocus,
+                  taction: TextInputAction.next,
+                  onsubmitted: (p0) {
+                    FocusScope.of(context).requestFocus(buttonFocus);
+                  },
+                  controller: tidController,
+                  icon: Icon(Icons.numbers),
+                  hint: "Enter TID",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "TID is required!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                form.button(
+                  focusnode: buttonFocus,
+                  text: Text("Confirm", style: TextStyle(color: Colors.black)),
+                  onPressed: () {
+                    if (!_key.currentState!.validate()) {
+                      return;
+                    }
+                    Navigator.pop(context);
+                    Utils().flutterToast(
+                      "After Confirmation your balance will be updated!",
+                      context,
+                    );
+                    moneyController.clear();
+                    tidController.clear();
+                    selectedMethod == null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
