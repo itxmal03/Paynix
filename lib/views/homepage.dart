@@ -21,24 +21,41 @@ class _HomepageState extends State<Homepage> {
   TextEditingController moneyController = TextEditingController();
   TextEditingController tidController = TextEditingController();
   TextEditingController swapAmountController = TextEditingController();
+  TextEditingController receiverNumber = TextEditingController();
+  TextEditingController receiverName = TextEditingController();
 
   FocusNode buttonFocus = FocusNode();
   FocusNode tidFocus = FocusNode();
+  FocusNode receiverNameFocus = FocusNode();
+  FocusNode receiverNumberFocus = FocusNode();
+  FocusNode withrawButtonFocus = FocusNode();
 
   final _key = GlobalKey<FormState>();
   final _key2 = GlobalKey<FormState>();
+  final _key3 = GlobalKey<FormState>();
 
   final List<String> paymentMethods = [
+    "Binance",
     "JazzCash",
     "EasyPaisa",
     "NayaPay",
     "SadaPay",
   ];
 
-  final List<String> swapCurrency = ["BTC", "USD", "TON"];
+  final List<String> receiverMethods = [
+    "Paynix",
+    "Binance",
+    "JazzCash",
+    "EasyPaisa",
+    "NayaPay",
+    "SadaPay",
+  ];
+
+  final List<String> swapCurrency = ["BTC", "USD"];
 
   String? selectedMethod;
   String? selectedCurrency;
+  String? selectedReceiverMethod;
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +158,12 @@ class _HomepageState extends State<Homepage> {
                   },
                   child: actionCard(Icons.swap_vert, "Swap", Colors.blue),
                 ),
-                actionCard(Icons.remove_sharp, "Withraw", Colors.red),
+                InkWell(
+                  onTap: () {
+                    withrawMoney();
+                  },
+                  child: actionCard(Icons.remove_sharp, "Withraw", Colors.red),
+                ),
                 actionCard(
                   Icons.history,
                   "Transactions",
@@ -195,6 +217,139 @@ class _HomepageState extends State<Homepage> {
           ],
         ),
       ),
+    );
+  }
+
+  void withrawMoney() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Center(
+            child: Text(
+              "Withraw Money",
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          content: Form(
+            key: _key3,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField(
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 0,
+                    ),
+                    label: Text('--Select Payment Method--'),
+                    labelStyle: TextStyle(fontSize: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Color(0xff57C785),
+                      ),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                  ),
+                  value: selectedReceiverMethod,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a payment method!';
+                    }
+                    return null;
+                  },
+                  items: receiverMethods.map((method) {
+                    return DropdownMenuItem(
+                      value: method,
+                      child: Text(
+                        method,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {},
+                ),
+                SizedBox(height: 10),
+                form.signInTf(
+                  focus: receiverNumberFocus,
+                  taction: TextInputAction.next,
+                  onsubmitted: (p0) {
+                    FocusScope.of(context).requestFocus(receiverNameFocus);
+                  },
+                  controller: receiverNumber,
+                  icon: Icon(Icons.credit_card),
+                  hint: selectedReceiverMethod == "Paynix"
+                      ? "Enter Paynix UID"
+                      : "Enter account number",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return selectedReceiverMethod == "Paynix"
+                          ? "Paynix UID is required!"
+                          : "Account number is required!";
+                    }
+                    if ((p0 == "Paynix") && (p0.length < 6 || p0.length > 6)) {
+                      return "Paynix UID must be 6 characters!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                form.signInTf(
+                  focus: receiverNameFocus,
+                  taction: TextInputAction.next,
+                  onsubmitted: (p0) {
+                    FocusScope.of(context).requestFocus(withrawButtonFocus);
+                  },
+                  controller: receiverName,
+                  icon: Icon(Icons.person),
+                  hint: "Enter receiver name",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Receiver name is required!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                form.button(
+                  focusnode: withrawButtonFocus,
+                  text: Text("Send", style: TextStyle(color: Colors.black)),
+                  onPressed: () {
+                    if (!_key3.currentState!.validate()) {
+                      return;
+                    }
+                    Navigator.pop(context);
+                    Utils().flutterToast("Transaction Successful!", context);
+                    receiverName.clear();
+                    receiverNumber.clear();
+                    selectedReceiverMethod == null;
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
