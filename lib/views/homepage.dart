@@ -6,6 +6,7 @@ import 'package:pf_project/views/about_app.dart';
 import 'package:pf_project/views/contact_us.dart';
 import 'package:pf_project/views/helper%20%20widgets/custom_widgets.dart';
 import 'package:pf_project/views/privacy_policies.dart';
+import 'package:pf_project/views/transactions_history.dart';
 import 'package:provider/provider.dart';
 
 class Homepage extends StatefulWidget {
@@ -164,10 +165,20 @@ class _HomepageState extends State<Homepage> {
                   },
                   child: actionCard(Icons.remove_sharp, "Withraw", Colors.red),
                 ),
-                actionCard(
-                  Icons.history,
-                  "Transactions",
-                  Color.fromARGB(255, 16, 41, 123),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionsHistory(),
+                      ),
+                    );
+                  },
+                  child: actionCard(
+                    Icons.history,
+                    "Transactions",
+                    Color.fromARGB(255, 16, 41, 123),
+                  ),
                 ),
               ],
             ),
