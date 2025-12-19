@@ -6,5 +6,6 @@ using namespace std;
 
 int signUp(string enteredName, string enteredEmail, string enteredPassword, string confimPassWord);
 int signIn(string enteredEmail, string passWord);
+int uidGenerator();
 
 #endif

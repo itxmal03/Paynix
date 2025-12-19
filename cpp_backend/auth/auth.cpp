@@ -57,6 +57,39 @@ int signIn(string enteredEmail, string enteredPassword)
     return 5; // unexpected behaviour
 }
 
+int uidGenerator()
+{
+    int lastUid = 0;
+    ifstream file;
+    file.open("users.text");
+    if (file.is_open())
+    {
+        string readLine;
+        while (getline(file, readLine))
+        {
+            if (readLine.empty())
+            {
+                continue;
+            }
+            int uid;
+            char seperater;
+            stringstream ss(readLine);
+            ss >> uid >> seperater;
+            if (uid > lastUid)
+            {
+                lastUid = uid;
+            }
+        }
+        file.close();
+        return lastUid + 1;
+    }
+    else
+    {
+        return 1; // file opening error
+    }
+    return 0;
+}
+
 int signUp(string enteredName, string enteredEmail, string enteredPassword, string enteredConfirmPassword)
 {
     userCredentials user;
@@ -64,6 +97,7 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
     user.passWord = enteredPassword;
     user.confirmPassword = enteredConfirmPassword;
     user.userName = enteredName;
+    int newUid = uidGenerator();
 
     if (user.passWord != user.confirmPassword)
     {
@@ -103,7 +137,7 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
         file.open("users.txt", ios::app);
         if (file.is_open())
         {
-            file << user.userName << "|" << user.email << "|" << user.passWord << endl;
+            file << newUid << "|" << user.userName << "|" << user.email << "|" << user.passWord << endl;
             file.close();
             return 0; //  if Sign Up successfull!";
         }
