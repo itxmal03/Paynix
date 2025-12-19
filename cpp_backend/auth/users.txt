@@ -1,1 +1,1 @@
-aftab|ali@gmail.com|32
+1|Ali|ali@email.com|123

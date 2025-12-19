@@ -6,7 +6,7 @@ using namespace std;
 
 /*
   return 0 => if function execution successfull i.e required action done.
-  return 1 => if file opening error!
+  return -1 => if file opening error!
   return 2 => if invalid email or password for signin
   return 3 => if passwords doesn't matched in signup
   return 4 => if account already exists
@@ -48,7 +48,7 @@ int signIn(string enteredEmail, string enteredPassword)
     }
     else
     {
-        return 1; // if file opening error!
+        return -1; // if file opening error!
     }
     if (!userFound)
     {
@@ -61,7 +61,7 @@ int uidGenerator()
 {
     int lastUid = 0;
     ifstream file;
-    file.open("users.text");
+    file.open("users.txt");
     if (file.is_open())
     {
         string readLine;
@@ -85,7 +85,7 @@ int uidGenerator()
     }
     else
     {
-        return 1; // file opening error
+        return -1; // file opening error
     }
     return 0;
 }
@@ -128,7 +128,7 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
     }
     else
     {
-        return 1; // if File opening error!
+        return -1; // if File opening error!
     }
 
     if (!userFound)
@@ -143,7 +143,7 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
         }
         else
         {
-            return 1; // File opening error!
+            return -1; // File opening error!
         }
     }
     return 5; // unexpected behaviour
