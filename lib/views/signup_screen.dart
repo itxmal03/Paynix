@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:pf_project/core/utils.dart';
 import 'package:pf_project/views/helper%20%20widgets/custom_widgets.dart';
+import 'package:pf_project/views/homepage.dart';
 import 'package:pf_project/views/signin_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -27,6 +31,8 @@ class _SignUpScreen extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   bool obsecure = true;
   bool reobsecure = true;
+
+  String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -146,21 +152,21 @@ class _SignUpScreen extends State<SignUpScreen> {
                                 if (p0.length < 6) {
                                   return 'Password must be at least 6 characters';
                                 }
-    
+
                                 return null;
                               },
                             ),
                             SizedBox(height: heightX * 0.025),
                             form.signInTf(
                               focus: confirmPasswordFocus,
-    
+
                               taction: TextInputAction.next,
                               onsubmitted: (p0) {
                                 FocusScope.of(
                                   context,
                                 ).requestFocus(buttonFocus);
                               },
-    
+
                               obsecure: reobsecure,
                               controller: confirmPasswordController,
                               icon: IconButton(
@@ -208,12 +214,14 @@ class _SignUpScreen extends State<SignUpScreen> {
                                   },
                                   child: Text(
                                     'Sign In',
-                                    style: TextStyle(color: Colors.deepPurpleAccent),
+                                    style: TextStyle(
+                                      color: Colors.deepPurpleAccent,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-    
+
                             SizedBox(height: heightX * 0.025),
                             SizedBox(
                               width: widthX * 0.2,
@@ -226,6 +234,12 @@ class _SignUpScreen extends State<SignUpScreen> {
                                   if (!_formKey.currentState!.validate()) {
                                     return;
                                   }
+                                  signup(
+                                    nameContoller.text,
+                                    emailController.text,
+                                    passwordController.text,
+                                    confirmPasswordController.text,
+                                  );
                                 },
                               ),
                             ),
@@ -241,5 +255,77 @@ class _SignUpScreen extends State<SignUpScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> signup(
+    String userName,
+    String email,
+    String password,
+    String confirmPassword,
+  ) async {
+    try {
+      final result = await Process.run(
+        'auth.exe',
+        ['signUp', userName, email, password, confirmPassword],
+        workingDirectory: Directory.current.path,
+      );
+
+      final int decide = result.exitCode;
+
+      switch (decide) {
+        case 0:
+          {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Homepage()),
+            );
+            setState(() {
+              message = "Sign Up successfully!";
+            });
+          }
+          break;
+        case -1:
+          {
+            setState(() {
+              message = "FOE-Unexpected Error!"; //file opening error
+            });
+          }
+          break;
+        case 3:
+          {
+            setState(() {
+              message = "Invalid email or password!";
+            });
+          }
+          break;
+        case 4:
+          {
+            setState(() {
+              message = "Account already exists!";
+            });
+          }
+          break;
+        case 5:
+          {
+            setState(() {
+              message = "Unexpected Error!";
+            });
+          }
+          break;
+
+        default:
+          {
+            setState(() {
+              message = "Internal error!";
+            });
+          }
+      }
+      Utils().flutterToast(message.toString(), context);
+    } catch (e) {
+      debugPrint("Process error: $e");
+      setState(() {
+        message = "Failed to connect backend!";
+      });
+    }
   }
 }
