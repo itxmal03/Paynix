@@ -14,5 +14,5 @@ int main(int arguments, char *arg[])
         return signIn(arg[2], arg[3]);
     }
 
-    return 5; // invalid arguments/unexpected behaviour!
+    return 9; // invalid arguments/unexpected behaviour!
 }

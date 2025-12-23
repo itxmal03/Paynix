@@ -32,11 +32,14 @@ int signIn(string enteredEmail, string enteredPassword)
     {
         while (getline(readfile, line))
         {
+            int uid;
+            char separator;
             string name, email, password;
             stringstream ss(line);
+            ss >> uid >> separator;
             getline(ss, name, '|');
             getline(ss, email, '|');
-            getline(ss, password, '|');
+            getline(ss, password);
 
             if (email == user.email && password == user.passWord)
             {
@@ -112,11 +115,14 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
     {
         while (getline(readfile, line))
         {
+            int uid;
+            char separator;
             string name, email, password;
             stringstream ss(line);
+            ss >> uid >> separator;
             getline(ss, name, '|');
             getline(ss, email, '|');
-            getline(ss, password, '|');
+            getline(ss, password);
 
             if (email == user.email)
             {
