@@ -181,13 +181,17 @@ class _HomepageState extends State<Homepage> {
                   onTap: () {
                     swapMoney();
                   },
-                  child: actionCard(Icons.swap_vert, "Swap", Colors.blue),
+                  child: actionCard(Icons.swap_vert, "Exchange", Colors.blue),
                 ),
                 InkWell(
                   onTap: () {
                     withrawMoney();
                   },
-                  child: actionCard(Icons.remove_sharp, "Withraw", Colors.red),
+                  child: actionCard(
+                    Icons.trending_up,
+                    "Transfer",
+                    Colors.red,
+                  ),
                 ),
                 InkWell(
                   onTap: () {
@@ -415,6 +419,18 @@ class _HomepageState extends State<Homepage> {
                     },
                   ),
                   SizedBox(height: 10),
+                  form.signInTf(
+                    controller: billConsumerNo,
+                    icon: Icon(Icons.money),
+                    hint: "Enter amount to be paid",
+                    validator: (p0) {
+                      if (p0 == null || p0.isEmpty) {
+                        return "Amount is required!";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
                   form.button(
                     text: Text(
                       "Pay Bill",
@@ -546,6 +562,23 @@ class _HomepageState extends State<Homepage> {
                   validator: (p0) {
                     if (p0 == null || p0.isEmpty) {
                       return "Receiver name is required!";
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 10),
+                form.signInTf(
+                  focus: receiverNameFocus,
+                  taction: TextInputAction.next,
+                  onsubmitted: (p0) {
+                    FocusScope.of(context).requestFocus(withrawButtonFocus);
+                  },
+                  controller: receiverName,
+                  icon: Icon(Icons.money),
+                  hint: "Enter amount",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Amount is required!";
                     }
                     return null;
                   },
