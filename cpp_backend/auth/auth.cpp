@@ -18,7 +18,6 @@ struct userCredentials
     string userName, email, passWord, confirmPassword;
 };
 
-
 int signIn(string enteredEmail, string enteredPassword)
 {
     userCredentials user;
@@ -94,7 +93,6 @@ int uidGenerator()
     return 0;
 }
 
-
 int signUp(string enteredName, string enteredEmail, string enteredPassword, string enteredConfirmPassword)
 {
     userCredentials user;
@@ -147,6 +145,20 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
         {
             file << newUid << "|" << user.userName << "|" << user.email << "|" << user.passWord << endl;
             file.close();
+            double totalPkrBalance = 0;
+            double totalUsdBalance = 0;
+            ofstream walletFile;
+            walletFile.open("wallet.txt", ios::app);
+            if (walletFile.is_open())
+            {
+                walletFile << newUid << '|' << totalPkrBalance << '|' << totalUsdBalance << endl;
+                walletFile.close();
+            }
+            else
+            {
+                return -1; // file not opened
+            }
+
             return 0; //  if Sign Up successfull!";
         }
         else

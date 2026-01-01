@@ -56,7 +56,7 @@ class _HomepageState extends State<Homepage> {
     "SadaPay",
   ];
 
-  final List<String> swapCurrency = ["BTC", "USD"];
+  final List<String> swapCurrency = ["USD"];
 
   final Map<String, List<String>> bills = {
     "Electricity": ["MEPCO", "LESCO", "K-ELECTRIC"],
@@ -75,6 +75,7 @@ class _HomepageState extends State<Homepage> {
   //user details
   String? userName, email;
   int? userID;
+  String? totalPkrBalance, totalUsdBalance;
   bool isLoading = false;
   @override
   void initState() {
@@ -138,9 +139,24 @@ class _HomepageState extends State<Homepage> {
                 children: [
                   Text("Available Balance", style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-                  Text(
-                    "PKR 76,000,000",
-                    style: TextStyle(fontSize: 38, fontWeight: FontWeight.w600),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "PKR:$totalPkrBalance",
+                        style: TextStyle(
+                          fontSize: 35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        "USD:$totalUsdBalance\$",
+                        style: TextStyle(
+                          fontSize: 35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 5),
                   Row(
@@ -187,11 +203,7 @@ class _HomepageState extends State<Homepage> {
                   onTap: () {
                     withrawMoney();
                   },
-                  child: actionCard(
-                    Icons.trending_up,
-                    "Transfer",
-                    Colors.red,
-                  ),
+                  child: actionCard(Icons.trending_up, "Transfer", Colors.red),
                 ),
                 InkWell(
                   onTap: () {
@@ -233,6 +245,7 @@ class _HomepageState extends State<Homepage> {
                   child: smallInfoCard(
                     "Deposits",
                     "PKR 0",
+                    "USD 0",
                     Icons.arrow_upward,
                     Colors.green,
                   ),
@@ -242,6 +255,7 @@ class _HomepageState extends State<Homepage> {
                   child: smallInfoCard(
                     "Withdrawals",
                     "PKR 0",
+                    "USD 0",
                     Icons.arrow_downward,
                     Colors.red,
                   ),
@@ -979,7 +993,7 @@ class _HomepageState extends State<Homepage> {
               setState(() {
                 isLoading = true;
               });
-              await Future.delayed(Duration(seconds: 3));
+              await Future.delayed(Duration(seconds: 2));
               await logout();
               isLoading = false;
             },
@@ -1013,7 +1027,8 @@ class _HomepageState extends State<Homepage> {
 
   Widget smallInfoCard(
     String title,
-    String value,
+    String pkr,
+    String usd,
     IconData icon,
     Color iconColor,
   ) {
@@ -1032,9 +1047,18 @@ class _HomepageState extends State<Homepage> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 5),
-            Text(
-              value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  pkr,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  usd,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ],
         ),
@@ -1138,7 +1162,7 @@ class _HomepageState extends State<Homepage> {
                     "Error in fetching user details!",
                     context,
                   );
-                  debugPrint("file opening error!");
+                  debugPrint("file opening error! -1");
                 }
                 break;
               case 5:
@@ -1150,6 +1174,11 @@ class _HomepageState extends State<Homepage> {
                     "Error in fetching user details!",
                     context,
                   );
+                }
+                break;
+              case -4:
+                {
+                  debugPrint("file opening error! -4");
                 }
                 break;
               default:
@@ -1164,6 +1193,8 @@ class _HomepageState extends State<Homepage> {
               setState(() {
                 userName = line[0];
                 email = line[1];
+                totalPkrBalance = line[2];
+                totalUsdBalance = line[3];
               });
             }
           }

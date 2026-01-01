@@ -29,9 +29,8 @@ int main(int arguments, char *arg[])
             if (uid == currentUser)
             {
                 cout << userName << endl;
-                cout << email;
+                cout << email << endl;
                 readUserFile.close();
-                return 0;
             }
         }
     }
@@ -39,5 +38,31 @@ int main(int arguments, char *arg[])
     {
         return -1; // file opening error!
     }
-    return 5; // unexpected error
+    ifstream readWalletFile;
+    readWalletFile.open("wallet.txt");
+    if (readWalletFile.is_open())
+    {
+        int userId;
+        char separator;
+        string pkrBalance, usdBalance, line;
+        while (getline(readWalletFile, line))
+        {
+            stringstream ss(line);
+            ss >> userId >> separator;
+            getline(ss, pkrBalance, '|');
+            getline(ss, usdBalance, '|');
+            if (userId == currentUser)
+            {
+                cout << pkrBalance << endl;
+                cout << usdBalance << endl;
+                readWalletFile.close();
+            }
+        }
+    }
+    else
+    {
+        return -4;
+    }
+
+    return 0;
 }
