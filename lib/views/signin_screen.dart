@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:pf_project/core/utils.dart';
 import 'package:pf_project/views/helper%20%20widgets/custom_widgets.dart';
 import 'package:pf_project/views/homepage.dart';
 import 'package:pf_project/views/signup_screen.dart';
@@ -23,6 +26,7 @@ class _SignInScreen extends State<SignInScreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool obsecure = true;
+  String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -161,14 +165,12 @@ class _SignInScreen extends State<SignInScreen> {
                                 style: TextStyle(color: Colors.black),
                               ),
                               onPressed: () {
-                                // if (!_formKey.currentState!.validate()) {
-                                //   return;
-                                // }
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Homepage(),
-                                  ),
+                                if (!_formKey.currentState!.validate()) {
+                                  return;
+                                }
+                                signin(
+                                  emailController.text.trim(),
+                                  passwordController.text.trim(),
                                 );
                               },
                             ),
@@ -184,5 +186,66 @@ class _SignInScreen extends State<SignInScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> signin(String email, String password) async {
+    try {
+      final result = await Process.run('program.exe', [
+        'signIn',
+        email,
+        password,
+      ], workingDirectory: Directory.current.path);
+
+      final int decide = result.exitCode;
+      debugPrint("Return code: ${decide.toString()}");
+
+      switch (decide) {
+        case 0:
+          {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Homepage()),
+            );
+            setState(() {
+              message = "SignIn successfully!";
+            });
+          }
+          break;
+        case 2:
+          {
+            setState(() {
+              message = "User not found!";
+            });
+          }
+          break;
+        case -1:
+          {
+            setState(() {
+              message = "FOE-Unexpected Error!"; //file opening error
+            });
+          }
+          break;
+        case 5:
+          {
+            setState(() {
+              message = "Unexpected Error!";
+            });
+          }
+          break;
+
+        default:
+          {
+            setState(() {
+              message = "Internal error!";
+            });
+          }
+      }
+      Utils().flutterToast(message.toString(), context);
+    } catch (e) {
+      debugPrint("Process error: $e");
+      setState(() {
+        message = "Failed to connect backend!";
+      });
+    }
   }
 }

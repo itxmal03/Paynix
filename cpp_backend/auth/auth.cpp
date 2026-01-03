@@ -7,7 +7,7 @@ using namespace std;
 /*
   return 0 => if function execution successfull i.e required action done.
   return -1 => if file opening error!
-  return 2 => if invalid email or password for signin
+  return 2 => if invalid email or password for signin / user not found!
   return 3 => if passwords doesn't matched in signup
   return 4 => if account already exists
   return 5 => if unexpected behavoir
@@ -17,6 +17,7 @@ struct userCredentials
 {
     string userName, email, passWord, confirmPassword;
 };
+
 
 int signIn(string enteredEmail, string enteredPassword)
 {
@@ -32,11 +33,14 @@ int signIn(string enteredEmail, string enteredPassword)
     {
         while (getline(readfile, line))
         {
+            int uid;
+            char separator;
             string name, email, password;
             stringstream ss(line);
+            ss >> uid >> separator;
             getline(ss, name, '|');
             getline(ss, email, '|');
-            getline(ss, password, '|');
+            getline(ss, password);
 
             if (email == user.email && password == user.passWord)
             {
@@ -52,7 +56,7 @@ int signIn(string enteredEmail, string enteredPassword)
     }
     if (!userFound)
     {
-        return 2; // if entered creds does not match !
+        return 2; // if entered creds does not match or user not found!
     }
     return 5; // unexpected behaviour
 }
@@ -90,6 +94,7 @@ int uidGenerator()
     return 0;
 }
 
+
 int signUp(string enteredName, string enteredEmail, string enteredPassword, string enteredConfirmPassword)
 {
     userCredentials user;
@@ -112,11 +117,14 @@ int signUp(string enteredName, string enteredEmail, string enteredPassword, stri
     {
         while (getline(readfile, line))
         {
+            int uid;
+            char separator;
             string name, email, password;
             stringstream ss(line);
+            ss >> uid >> separator;
             getline(ss, name, '|');
             getline(ss, email, '|');
-            getline(ss, password, '|');
+            getline(ss, password);
 
             if (email == user.email)
             {

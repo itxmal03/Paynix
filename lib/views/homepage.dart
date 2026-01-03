@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:pf_project/core/utils.dart';
 import 'package:pf_project/viewmodels/theme_viewmodel.dart';
@@ -425,7 +427,8 @@ class _HomepageState extends State<Homepage> {
           ),
         );
       },
-    ); }
+    );
+  }
 
   void withrawMoney() {
     showDialog(
@@ -808,209 +811,241 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
-}
 
-Widget endDrawer(BuildContext context) {
-  double widthx = MediaQuery.of(context).size.width;
-  double heightx = MediaQuery.of(context).size.height;
-  return Drawer(
-    width: widthx * 0.3,
-    child: ListView(
-      children: [
-        SizedBox(
-          height: 200,
-          width: widthx * 0.3,
+  Widget endDrawer(BuildContext context) {
+    double widthx = MediaQuery.of(context).size.width;
+    double heightx = MediaQuery.of(context).size.height;
+    return Drawer(
+      width: widthx * 0.3,
+      child: ListView(
+        children: [
+          SizedBox(
+            height: 200,
+            width: widthx * 0.3,
 
-          child: Image.asset('assets/image.png', fit: BoxFit.cover),
-        ),
-        SizedBox(height: heightx * 0.01),
-        SizedBox(
-          height: heightx * 0.27,
-          child: Column(
-            children: [
-              Text(
-                'Paynix',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25),
-              ),
-              SizedBox(height: heightx * 0.01),
-              ListTile(
-                leading: CircleAvatar(child: Icon(Icons.person)),
-                title: Text(
-                  'Username',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-                subtitle: Text(
-                  'Mr.Aftab',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-              ),
-              ListTile(
-                leading: CircleAvatar(child: Icon(Icons.email)),
-                title: Text(
-                  'Email',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-                subtitle: Text(
-                  'f2025-0961@bnu.edu.pk',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
+            child: Image.asset('assets/image.png', fit: BoxFit.cover),
           ),
-        ),
-        Divider(),
-        Consumer<ThemeViewmodel>(
-          builder: (context, val, child) => ListTile(
-            trailing: Transform.scale(
-              scale: 0.75,
-              child: Switch.adaptive(
-                value: val.isDark,
-                onChanged: (value) {
-                  val.updateTheme(value);
-                },
+          SizedBox(height: heightx * 0.01),
+          SizedBox(
+            height: heightx * 0.27,
+            child: Column(
+              children: [
+                Text(
+                  'Paynix',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25),
+                ),
+                SizedBox(height: heightx * 0.01),
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(
+                    'Username',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    'Mr.Aftab',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                ListTile(
+                  leading: CircleAvatar(child: Icon(Icons.email)),
+                  title: Text(
+                    'Email',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    'f2025-0961@bnu.edu.pk',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(),
+          Consumer<ThemeViewmodel>(
+            builder: (context, val, child) => ListTile(
+              trailing: Transform.scale(
+                scale: 0.75,
+                child: Switch.adaptive(
+                  value: val.isDark,
+                  onChanged: (value) {
+                    val.updateTheme(value);
+                  },
+                ),
+              ),
+              leading: Icon(Icons.dark_mode, size: 20),
+              title: Text(
+                'Dark Theme',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ),
-            leading: Icon(Icons.dark_mode, size: 20),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
+              );
+            },
+            leading: Icon(Icons.privacy_tip, size: 20),
             title: Text(
-              'Dark Theme',
+              'Privacy Policies',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
-        ),
-        ListTile(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
-            );
-          },
-          leading: Icon(Icons.privacy_tip, size: 20),
-          title: Text(
-            'Privacy Policies',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ),
-        ListTile(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AboutAppPage()),
-            );
-          },
-          leading: Icon(Icons.info, size: 20),
-          title: Text(
-            'About App',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ),
-        ListTile(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ContactUsPage()),
-            );
-          },
-          leading: Icon(Icons.contact_mail, size: 20),
-          title: Text(
-            'Contact Us',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ),
-        ListTile(
-          leading: Icon(Icons.logout, color: Colors.red),
-          title: Text(
-            'Logout',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.deepPurpleAccent,
+          ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutAppPage()),
+              );
+            },
+            leading: Icon(Icons.info, size: 20),
+            title: Text(
+              'About App',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
-          onTap: () {
-            Provider.of<ThemeViewmodel>(context, listen: false).setLightMode();
+          ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ContactUsPage()),
+              );
+            },
+            leading: Icon(Icons.contact_mail, size: 20),
+            title: Text(
+              'Contact Us',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.logout, color: Colors.red),
+            title: Text(
+              'Logout',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.deepPurpleAccent,
+              ),
+            ),
+            onTap: () {
+              Provider.of<ThemeViewmodel>(
+                context,
+                listen: false,
+              ).setLightMode();
+              logout();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget actionCard(IconData icon, String label, Color color) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        width: 100,
+        padding: EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 30),
+            SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget smallInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    Color iconColor,
+  ) {
+    return Card(
+      elevation: 3,
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 5),
+            Text(
+              value,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget transactionItem(
+    String title,
+    String amount,
+    String date,
+    Color color,
+  ) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.2),
+          child: Icon(Icons.account_balance_wallet, color: color),
+        ),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(date),
+        trailing: Text(
+          amount,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> logout() async {
+    try {
+      final result = await Process.run(
+        "logout.exe",
+        [],
+        workingDirectory: Directory.current.path,
+      );
+      int decide = result.exitCode;
+      switch (decide) {
+        case 0:
+          {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => SignInScreen()),
             );
-          },
-        ),
-      ],
-    ),
-  );
-}
-
-Widget actionCard(IconData icon, String label, Color color) {
-  return Card(
-    elevation: 2,
-    child: Container(
-      width: 100,
-      padding: EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 30),
-          SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget smallInfoCard(
-  String title,
-  String value,
-  IconData icon,
-  Color iconColor,
-) {
-  return Card(
-    elevation: 3,
-    child: Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          SizedBox(height: 10),
-          Text(
-            title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget transactionItem(String title, String amount, String date, Color color) {
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    child: ListTile(
-      leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.2),
-        child: Icon(Icons.account_balance_wallet, color: color),
-      ),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(date),
-      trailing: Text(
-        amount,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-    ),
-  );
+          }
+          break;
+        default:
+          Utils().flutterToast("Internal Error", context);
+          Navigator.pop(context);
+          break;
+      }
+    } catch (e) {
+      debugPrint("Error in logout :$e");
+    }
+  }
 }

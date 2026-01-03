@@ -1,6 +1,0 @@
-1|Ali|ali@email.com|123
-2|ad|a@gmail.com|123123
-3|ali|ali@gmail.com|123123
-4|as|a@gmail.com|321321
-5|Ali zafar|zaffar@gmail.com|44334433
-6|hassan |f@gmail.com|545464

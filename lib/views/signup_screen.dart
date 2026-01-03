@@ -4,7 +4,6 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:pf_project/core/utils.dart';
 import 'package:pf_project/views/helper%20%20widgets/custom_widgets.dart';
-import 'package:pf_project/views/homepage.dart';
 import 'package:pf_project/views/signin_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -236,7 +235,7 @@ class _SignUpScreen extends State<SignUpScreen> {
                                   }
                                   signup(
                                     nameContoller.text,
-                                    emailController.text,
+                                    emailController.text.trim(),
                                     passwordController.text,
                                     confirmPasswordController.text,
                                   );
@@ -264,11 +263,13 @@ class _SignUpScreen extends State<SignUpScreen> {
     String confirmPassword,
   ) async {
     try {
-      final result = await Process.run(
-        'auth.exe',
-        ['signUp', userName, email, password, confirmPassword],
-        workingDirectory: Directory.current.path,
-      );
+      final result = await Process.run('program.exe', [
+        'signUp',
+        userName,
+        email,
+        password,
+        confirmPassword,
+      ], workingDirectory: Directory.current.path);
 
       final int decide = result.exitCode;
 
@@ -277,10 +278,10 @@ class _SignUpScreen extends State<SignUpScreen> {
           {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Homepage()),
+              MaterialPageRoute(builder: (context) => SignInScreen()),
             );
             setState(() {
-              message = "Sign Up successfully!";
+              message = "Sign Up successfully.Login to proceed!";
             });
           }
           break;
@@ -294,7 +295,7 @@ class _SignUpScreen extends State<SignUpScreen> {
         case 3:
           {
             setState(() {
-              message = "Invalid email or password!";
+              message = "Password does not matched!";
             });
           }
           break;
