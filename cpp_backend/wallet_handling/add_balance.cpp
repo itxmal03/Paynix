@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -6,55 +6,62 @@ using namespace std;
 
 int main(int argument, char *arg[])
 {
-    bool pkrBalanceUpdate = false;
-    int userID = stoi(arg[1]);
-    int balanceType = stoi(arg[2]);
-    double balanceToAdd = stod(arg[3]);
-    if (balanceType == 1)
+    if (argument == 4)
     {
-        pkrBalanceUpdate = true;
-    }
-    vector<string> linesV;
-    ifstream walletFile;
-    walletFile.open("wallet.txt");
-    if (walletFile.is_open())
-    {
-        string line;
-        while (getline(walletFile, line))
+        bool pkrBalanceUpdate = false;
+        int userID = stoi(arg[1]);
+        int balanceType = stoi(arg[2]);
+        double balanceToAdd = stod(arg[3]);
+        if (balanceType == 1)
         {
-            linesV.push_back(line);
+            pkrBalanceUpdate = true;
         }
-        for (string &x : linesV)
+        vector<string> linesV;
+        ifstream walletFile;
+        walletFile.open("wallet.txt");
+        if (walletFile.is_open())
         {
-            int uid;
-            char separator;
-            double totalPkrBalance, totalUsdBalance;
-            stringstream ss(x);
-            ss >> uid >> separator >> totalPkrBalance >> separator >> totalUsdBalance;
-            if (uid == userID)
+            string line;
+            while (getline(walletFile, line))
             {
-                if (pkrBalanceUpdate)
-                {
-                    totalPkrBalance = totalPkrBalance + balanceToAdd;
-                }
-                else
-                {
-                    totalUsdBalance = totalUsdBalance + balanceToAdd;
-                }
-                x = to_string(uid) + "|" + to_string(totalPkrBalance) + "|" + to_string(totalUsdBalance);
-                break;
+                linesV.push_back(line);
             }
-        }
-        walletFile.close();
-        ofstream rewriteWalletFile;
-        rewriteWalletFile.open("wallet.txt", ios::trunc);
-        if (rewriteWalletFile.is_open())
-        {
-            for (string x : linesV)
+            for (string &x : linesV)
             {
-                rewriteWalletFile << x << endl;
+                int uid;
+                char separator;
+                double totalPkrBalance, totalUsdBalance;
+                stringstream ss(x);
+                ss >> uid >> separator >> totalPkrBalance >> separator >> totalUsdBalance;
+                if (uid == userID)
+                {
+                    if (pkrBalanceUpdate)
+                    {
+                        totalPkrBalance = totalPkrBalance + balanceToAdd;
+                    }
+                    else
+                    {
+                        totalUsdBalance = totalUsdBalance + balanceToAdd;
+                    }
+                    x = to_string(uid) + "|" + to_string(totalPkrBalance) + "|" + to_string(totalUsdBalance);
+                    break;
+                }
             }
-            rewriteWalletFile.close();
+            walletFile.close();
+            ofstream rewriteWalletFile;
+            rewriteWalletFile.open("wallet.txt", ios::trunc);
+            if (rewriteWalletFile.is_open())
+            {
+                for (string x : linesV)
+                {
+                    rewriteWalletFile << x << endl;
+                }
+                rewriteWalletFile.close();
+            }
+            else
+            {
+                return -1;
+            }
         }
         else
         {
@@ -63,7 +70,8 @@ int main(int argument, char *arg[])
     }
     else
     {
-        return -1;
+        return -6; // no of arguments is not correct
     }
+
     return 0;
 }
