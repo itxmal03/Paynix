@@ -27,12 +27,14 @@ class _HomepageState extends State<Homepage> {
   TextEditingController receiverNumber = TextEditingController();
   TextEditingController receiverName = TextEditingController();
   TextEditingController billConsumerNo = TextEditingController();
+  TextEditingController billAmountController = TextEditingController();
 
   FocusNode buttonFocus = FocusNode();
   FocusNode tidFocus = FocusNode();
   FocusNode receiverNameFocus = FocusNode();
   FocusNode receiverNumberFocus = FocusNode();
   FocusNode withrawButtonFocus = FocusNode();
+  FocusNode moneyFocus = FocusNode();
 
   final _key = GlobalKey<FormState>();
   final _key2 = GlobalKey<FormState>();
@@ -56,6 +58,7 @@ class _HomepageState extends State<Homepage> {
     "SadaPay",
   ];
 
+  final List<String> currency = ["PKR", "USD"];
   final List<String> swapCurrency = ["USD"];
 
   final Map<String, List<String>> bills = {
@@ -71,6 +74,7 @@ class _HomepageState extends State<Homepage> {
   String? selectedReceiverMethod;
   String? selectedBill;
   String? selectedSP;
+  String? selectedCurrencyToAdd;
 
   //user details
   String? userName, email;
@@ -143,14 +147,14 @@ class _HomepageState extends State<Homepage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "PKR:$totalPkrBalance",
+                        "PKR:${totalPkrBalance ?? 0}",
                         style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        "USD:$totalUsdBalance\$",
+                        "USD:${totalUsdBalance ?? 0}\$",
                         style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.w600,
@@ -167,7 +171,7 @@ class _HomepageState extends State<Homepage> {
                         style: TextStyle(fontSize: 14),
                       ),
                       SelectableText(
-                        "UID:Px$userID",
+                        "UID:Px0$userID",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -189,7 +193,7 @@ class _HomepageState extends State<Homepage> {
               children: [
                 InkWell(
                   onTap: () {
-                    addMoney();
+                    addMoneyCard();
                   },
                   child: actionCard(Icons.add, "Add Money", Colors.green),
                 ),
@@ -434,7 +438,7 @@ class _HomepageState extends State<Homepage> {
                   ),
                   SizedBox(height: 10),
                   form.signInTf(
-                    controller: billConsumerNo,
+                    controller: billAmountController,
                     icon: Icon(Icons.money),
                     hint: "Enter amount to be paid",
                     validator: (p0) {
@@ -557,8 +561,9 @@ class _HomepageState extends State<Homepage> {
                           ? "Paynix UID is required!"
                           : "Account number is required!";
                     }
-                    if ((p0 == "Paynix") && (p0.length < 6 || p0.length > 6)) {
-                      return "Paynix UID must be 6 characters!";
+                    if ((selectedMethod == "Paynix") &&
+                        (p0.length < 4 || p0.length > 4)) {
+                      return "Paynix UID must be greater than 3 characters!";
                     }
                     return null;
                   },
@@ -745,7 +750,7 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  void addMoney() {
+  void addMoneyCard() {
     showDialog(
       context: context,
       builder: (context) {
@@ -761,15 +766,61 @@ class _HomepageState extends State<Homepage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                form.signInTf(
-                  controller: moneyController,
-                  icon: Icon(Icons.money),
-                  hint: "Enter amount you sent",
-                  validator: (p0) {
-                    if (p0 == null || p0.isEmpty) {
-                      return "Sent amount is required!";
+                DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select any currency!';
                     }
                     return null;
+                  },
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 0,
+                    ),
+                    label: Text('--Select Currency--'),
+                    labelStyle: TextStyle(fontSize: 14),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1, color: Colors.red),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Color(0xff57C785),
+                      ),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(width: 1),
+                    ),
+                  ),
+                  value: selectedCurrencyToAdd,
+                  items: currency.map((currency) {
+                    return DropdownMenuItem(
+                      value: currency,
+                      child: Text(
+                        currency,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCurrencyToAdd = value;
+                    });
                   },
                 ),
                 SizedBox(height: 10),
@@ -824,7 +875,27 @@ class _HomepageState extends State<Homepage> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    setState(() {
+                      selectedMethod = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 10),
+                form.signInTf(
+                  controller: moneyController,
+                  focus: moneyFocus,
+                  onsubmitted: (p0) {
+                    FocusScope.of(context).requestFocus(tidFocus);
+                  },
+                  icon: Icon(Icons.money),
+                  hint: "Enter amount you sent",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Sent amount is required!";
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(height: 10),
                 form.signInTf(
@@ -835,10 +906,10 @@ class _HomepageState extends State<Homepage> {
                   },
                   controller: tidController,
                   icon: Icon(Icons.numbers),
-                  hint: "Enter TID",
+                  hint: "Enter TID/UID",
                   validator: (p0) {
                     if (p0 == null || p0.isEmpty) {
-                      return "TID is required!";
+                      return "TID/UID is required!";
                     }
                     return null;
                   },
@@ -847,18 +918,52 @@ class _HomepageState extends State<Homepage> {
                 form.button(
                   focusnode: buttonFocus,
                   text: Text("Confirm", style: TextStyle(color: Colors.black)),
-                  onPressed: () {
+                  onPressed: () async {
                     if (!_key.currentState!.validate()) {
                       return;
                     }
-                    Navigator.pop(context);
-                    Utils().flutterToast(
-                      "After Confirmation your balance will be updated!",
-                      context,
-                    );
+                    if ((selectedCurrencyToAdd == "USD" &&
+                        selectedMethod != "Binance")) {
+                      Navigator.pop(context);
+                      Utils().flutterToast(
+                        "USD Transaction can't be done except Binance Method!",
+                        context,
+                      );
+                    } else if ((selectedCurrencyToAdd == "PKR" &&
+                        selectedMethod == "Binance")) {
+                      Navigator.pop(context);
+                      Utils().flutterToast(
+                        "PKR Transaction can't be done through Binance!",
+                        context,
+                      );
+                    } else {
+                      Navigator.pop(context);
+                      Utils().flutterToast(
+                        "After Confirmation your balance will be updated!",
+                        context,
+                      );
+                      if (selectedMethod == "Binance") {
+                        await Future.delayed(Duration(seconds: 2));
+                        await addMoney(
+                          userID.toString(),
+                          2.toString(),
+                          moneyController.text,
+                        );
+                        await currentUser();
+                      } else {
+                        await Future.delayed(Duration(seconds: 2));
+                        await addMoney(
+                          userID.toString(),
+                          1.toString(),
+                          moneyController.text,
+                        );
+                        await currentUser();
+                      }
+                    }
                     moneyController.clear();
                     tidController.clear();
                     selectedMethod = null;
+                    selectedCurrencyToAdd = null;
                   },
                 ),
               ],
@@ -1190,6 +1295,7 @@ class _HomepageState extends State<Homepage> {
                 {
                   debugPrint("Get user info succesfully!");
                 }
+                break;
               default:
                 {
                   debugPrint("unexpected error  ...!");
@@ -1213,4 +1319,36 @@ class _HomepageState extends State<Homepage> {
       debugPrint("error in current user!");
     }
   }
+
+  Future<void> addMoney(String uid, String amountType, String amount) async {
+    try {
+      final result = await Process.run("add_balance.exe", [
+        uid,
+        amountType,
+        amount,
+      ], workingDirectory: Directory.current.path);
+      int decide = result.exitCode;
+      switch (decide) {
+        case 0:
+          {
+            debugPrint("Added Balance Successfully!");
+          }
+          break;
+        case 1:
+          {
+            debugPrint("Empty wallet file");
+          }
+          break;
+        case -1:
+          {
+            debugPrint("Wallet file opening error!");
+          }
+          break;
+        default:
+      }
+    } catch (e) {
+      debugPrint("Error in add money function: $e");
+    }
+  }
+
 }
