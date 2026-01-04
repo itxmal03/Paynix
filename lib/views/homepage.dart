@@ -26,6 +26,7 @@ class _HomepageState extends State<Homepage> {
   TextEditingController swapAmountController = TextEditingController();
   TextEditingController receiverNumber = TextEditingController();
   TextEditingController receiverName = TextEditingController();
+  TextEditingController amountToSend = TextEditingController();
   TextEditingController billConsumerNo = TextEditingController();
   TextEditingController billAmountController = TextEditingController();
 
@@ -59,7 +60,7 @@ class _HomepageState extends State<Homepage> {
   ];
 
   final List<String> currency = ["PKR", "USD"];
-  final List<String> swapCurrency = ["USD"];
+  final List<String> swapCurrency = ["USD", "PKR"];
 
   final Map<String, List<String>> bills = {
     "Electricity": ["MEPCO", "LESCO", "K-ELECTRIC"],
@@ -70,7 +71,7 @@ class _HomepageState extends State<Homepage> {
   };
 
   String? selectedMethod;
-  String? selectedCurrency;
+  String? selectedExchangeCurrency;
   String? selectedReceiverMethod;
   String? selectedBill;
   String? selectedSP;
@@ -79,8 +80,14 @@ class _HomepageState extends State<Homepage> {
   //user details
   String? userName, email;
   int? userID;
-  String? totalPkrBalance, totalUsdBalance;
+  double totalPkrBalance = 0, totalUsdBalance = 0;
   bool isLoading = false;
+  double gasFee = 0;
+  double exchangedAmount = 0;
+  double remainingBalance = 0;
+  int perUSDpkr = 280;
+  double perPKRusd = 0.0036;
+
   @override
   void initState() {
     currentUser();
@@ -147,14 +154,14 @@ class _HomepageState extends State<Homepage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "PKR:${totalPkrBalance ?? 0}",
+                        "PKR:$totalPkrBalance",
                         style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        "USD:${totalUsdBalance ?? 0}\$",
+                        "USD:$totalUsdBalance\$",
                         style: TextStyle(
                           fontSize: 35,
                           fontWeight: FontWeight.w600,
@@ -199,19 +206,19 @@ class _HomepageState extends State<Homepage> {
                 ),
                 InkWell(
                   onTap: () {
-                    swapMoney();
+                    exchangeMoneyCard();
                   },
                   child: actionCard(Icons.swap_vert, "Exchange", Colors.blue),
                 ),
                 InkWell(
                   onTap: () {
-                    withrawMoney();
+                    transferMoneyCard();
                   },
                   child: actionCard(Icons.trending_up, "Transfer", Colors.red),
                 ),
                 InkWell(
                   onTap: () {
-                    billPayments();
+                    billPaymentsCard();
                   },
                   child: actionCard(
                     Icons.receipt_long,
@@ -287,7 +294,7 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  void billPayments() {
+  void billPaymentsCard() {
     showDialog(
       context: context,
       builder: (context) {
@@ -474,14 +481,14 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  void withrawMoney() {
+  void transferMoneyCard() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Center(
             child: Text(
-              "Withraw Money",
+              "Transfer Money",
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
@@ -541,7 +548,11 @@ class _HomepageState extends State<Homepage> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReceiverMethod = value;
+                    });
+                  },
                 ),
                 SizedBox(height: 10),
                 form.signInTf(
@@ -592,12 +603,16 @@ class _HomepageState extends State<Homepage> {
                   onsubmitted: (p0) {
                     FocusScope.of(context).requestFocus(withrawButtonFocus);
                   },
-                  controller: receiverName,
+                  controller: amountToSend,
                   icon: Icon(Icons.money),
                   hint: "Enter amount",
                   validator: (p0) {
                     if (p0 == null || p0.isEmpty) {
                       return "Amount is required!";
+                    }
+                    double maxLimit = double.tryParse(p0) ?? 0;
+                    if (maxLimit > 100000000) {
+                      return "Max allowed limit is 100000000${selectedMethod == "USD" ? "\$" : "PKR"}";
                     }
                     return null;
                   },
@@ -625,14 +640,14 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  void swapMoney() {
+  void exchangeMoneyCard() {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Center(
             child: Text(
-              "Swap Money",
+              "Exchange Money",
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
@@ -641,18 +656,6 @@ class _HomepageState extends State<Homepage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                form.signInTf(
-                  controller: swapAmountController,
-                  icon: Icon(Icons.money),
-                  hint: "Enter amount to swap",
-                  validator: (p0) {
-                    if (p0 == null || p0.isEmpty) {
-                      return "Please enter amount to swap!";
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
                 DropdownButtonFormField(
                   decoration: InputDecoration(
                     contentPadding: EdgeInsets.symmetric(
@@ -685,7 +688,7 @@ class _HomepageState extends State<Homepage> {
                       borderSide: BorderSide(width: 1),
                     ),
                   ),
-                  value: selectedCurrency,
+                  value: selectedExchangeCurrency,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please select a currency!';
@@ -704,42 +707,46 @@ class _HomepageState extends State<Homepage> {
                       ),
                     );
                   }).toList(),
-                  onChanged: (value) {},
+                  onChanged: (value) {
+                    selectedExchangeCurrency = value;
+                  },
                 ),
                 SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Exchange Rate:"), Text("280")],
-                ),
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Exchange fee:"), Text("200")],
-                ),
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Swaped amount:"), Text("1200")],
-                ),
-                SizedBox(height: 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text("Remaining Balance:"), Text("1000")],
+                form.signInTf(
+                  controller: swapAmountController,
+                  icon: Icon(Icons.money),
+                  hint: "Enter amount to swap",
+                  validator: (p0) {
+                    if (p0 == null || p0.isEmpty) {
+                      return "Please enter amount to swap!";
+                    }
+                    double maxLimit = double.tryParse(p0) ?? 0;
+                    if (maxLimit > 100000000) {
+                      return "Max allowed limit is 100000000${selectedMethod == "USD" ? "\$" : "PKR"}";
+                    }
+
+                    return null;
+                  },
                 ),
                 SizedBox(height: 10),
                 form.button(
-                  text: Text("Confirm", style: TextStyle(color: Colors.black)),
+                  text: Text("Exchange", style: TextStyle(color: Colors.black)),
                   onPressed: () {
                     if (!_key2.currentState!.validate()) {
                       return;
                     }
+                    double totalB = 0;
+                    double amount =
+                        double.tryParse(swapAmountController.text) ?? 0;
+                    if (selectedExchangeCurrency == "PKR") {
+                      totalB = totalPkrBalance;
+                    } else {
+                      totalB = totalUsdBalance;
+                    }
+                    gasFeeDeduction();
+                    stats(selectedExchangeCurrency.toString(), totalB, amount);
                     Navigator.pop(context);
-                    Utils().flutterToast(
-                      "Amount Swaped Successfully!",
-                      context,
-                    );
-                    swapAmountController.clear();
-                    selectedCurrency = null;
+                    exchangeConfirmation();
                   },
                 ),
               ],
@@ -748,6 +755,146 @@ class _HomepageState extends State<Homepage> {
         );
       },
     );
+  }
+
+  void exchangeConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Center(
+            child: Text("Stats", style: TextStyle(fontWeight: FontWeight.w500)),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Exchange Rate:"),
+                  Text(
+                    selectedExchangeCurrency == "USD"
+                        ? "$perPKRusd "
+                        : "$perUSDpkr\$",
+                  ),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [Text("Exchange fee:"), Text("$gasFee")],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [Text("Exchanged amount:"), Text("$exchangedAmount")],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Remaining Balance:${selectedExchangeCurrency == "USD" ? "USD" : "PKR"}",
+                  ),
+                  Text("$remainingBalance"),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Cancel", style: TextStyle(color: Colors.blue)),
+                  ),
+                  form.button(
+                    text: Text(
+                      "Confirm",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      Utils().flutterToast(
+                        "Amount exchanged Successfully!",
+                        context,
+                      );
+                      Future.delayed(Duration(seconds: 1));
+                      int balType = 0;
+                      if (selectedExchangeCurrency == "PKR") {
+                        balType = 1;
+                      } else if (selectedExchangeCurrency == "USD") {
+                        balType = 2;
+                      }
+                      await exchangeMoney(
+                        userID.toString(),
+                        balType.toString(),
+                        swapAmountController.text.trim(),
+                      );
+                      await currentUser();
+                      setState(() {
+                        selectedExchangeCurrency = null;
+                        swapAmountController.clear();
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void stats(String balanceType, double totalBalance, double amountToExchange) {
+    if (balanceType == "PKR") {
+      remainingBalance = totalBalance - (amountToExchange + gasFee);
+      exchangedAmount = amountToExchange * perPKRusd;
+    } else {
+      remainingBalance = totalBalance - (amountToExchange + gasFee);
+      exchangedAmount = amountToExchange * perUSDpkr;
+    }
+    setState(() {
+      remainingBalance;
+      exchangedAmount;
+    });
+  }
+
+  double gasFeeDeduction() {
+    double amount = double.tryParse(swapAmountController.text) ?? 0;
+    if (selectedExchangeCurrency == "PKR") {
+      if (amount < 5000) {
+        gasFee = 50;
+      } else if (amount < 10000) {
+        gasFee = 100;
+      } else if (amount < 100000) {
+        gasFee = 1000;
+      } else if (amount < 1000000) {
+        gasFee = 5000;
+      } else if (amount < 10000000) {
+        gasFee = 10000;
+      } else if (amount < 100000000) {
+        gasFee = 20000;
+      }
+    } else {
+      if (amount < 50) {
+        gasFee = 3;
+      } else if (amount < 100) {
+        gasFee = 5;
+      } else if (amount < 100000) {
+        gasFee = 100;
+      } else if (amount < 1000000) {
+        gasFee = 500;
+      } else if (amount < 10000000) {
+        gasFee = 1000;
+      } else if (amount < 100000000) {
+        gasFee = 2000;
+      }
+    }
+    setState(() {});
+    return gasFee;
   }
 
   void addMoneyCard() {
@@ -893,6 +1040,10 @@ class _HomepageState extends State<Homepage> {
                   validator: (p0) {
                     if (p0 == null || p0.isEmpty) {
                       return "Sent amount is required!";
+                    }
+                    double maxLimit = double.tryParse(p0) ?? 0;
+                    if (maxLimit > 100000000) {
+                      return "Max allowed limit is 100000000${selectedMethod == "USD" ? "\$" : "PKR"}";
                     }
                     return null;
                   },
@@ -1308,8 +1459,10 @@ class _HomepageState extends State<Homepage> {
               setState(() {
                 userName = line[0];
                 email = line[1];
-                totalPkrBalance = line[2];
-                totalUsdBalance = line[3];
+                double tPKRB = double.tryParse(line[2]) ?? 0;
+                double tUSDB = double.tryParse(line[3]) ?? 0;
+                totalPkrBalance = tPKRB;
+                totalUsdBalance = tUSDB;
               });
             }
           }
@@ -1351,4 +1504,49 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
+  Future<void> exchangeMoney(
+    String uid,
+    String amountType,
+    String amount,
+  ) async {
+    try {
+      final resultx = await Process.run("exchange.exe", [
+        uid,
+        amountType,
+        amount,
+      ], workingDirectory: Directory.current.path);
+      int decide = resultx.exitCode;
+      debugPrint("exchange decide code: $decide");
+      switch (decide) {
+        case 0:
+          {
+            debugPrint("Exchanged money sucessfully!");
+            await Future.delayed(Duration(seconds: 1));
+            await currentUser();
+          }
+          break;
+        case -7:
+          {
+            if (!mounted) {
+              return;
+            }
+            Utils().flutterToast(
+              "Insufficient Balance for this action!",
+              context,
+            );
+          }
+          break;
+        case -1:
+          {
+            debugPrint("File opening error in exchange funtion!");
+          }
+        default:
+          {
+            debugPrint("Error in exchange money function cpp");
+          }
+      }
+    } catch (e) {
+      debugPrint("Error in exchang money function $e");
+    }
+  }
 }
