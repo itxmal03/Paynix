@@ -28,13 +28,12 @@ int main(int argument, char *arg[])
         if (walletFile.is_open())
         {
             string line;
-            if (line.empty())
-            {
-                return 1; // empty wallet file
-            }
-
             while (getline(walletFile, line))
             {
+                if (line.empty())
+                {
+                    return 1; // empty wallet file
+                }
                 linesV.push_back(line);
             }
             for (string &x : linesV)
@@ -85,4 +84,5 @@ int main(int argument, char *arg[])
     {
         return -6; // no of arguments is not correct
     }
+    return 0;
 }
