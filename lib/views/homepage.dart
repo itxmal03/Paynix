@@ -1035,6 +1035,14 @@ class _HomepageState extends State<Homepage> {
                         balType.toString(),
                         amountToSend.text.trim(),
                       );
+                      await transferHistory(
+                        userID.toString(),
+                        selectedCurrencyToSend!,
+                        selectedReceiverMethod!,
+                        receiverNumber.text.trim(),
+                        receiverName.text.trim(),
+                        amountToSend.text.trim(),
+                      );
                       await currentUser();
                       setState(() {
                         selectedReceiverMethod = null;
@@ -2168,6 +2176,58 @@ class _HomepageState extends State<Homepage> {
         return;
       }
       debugPrint("Error in exchange history history function cpp: $e");
+      Utils().flutterToast("Unexpected error while processing!", context);
+    }
+  }
+
+  Future<void> transferHistory(
+    String uid,
+    String transferedCurrency,
+    String method,
+    String accountNumber,
+    String receiverName,
+    String sentAmount,
+  ) async {
+    try {
+      final history = await Process.run("transferHistory.exe", [
+        uid,
+        transferedCurrency,
+        method,
+        accountNumber,
+        receiverName,
+        sentAmount,
+      ], workingDirectory: Directory.current.path);
+      int decide = history.exitCode;
+      switch (decide) {
+        case 0:
+          {
+            debugPrint("Added transfer history sucessfully!");
+          }
+          break;
+        case -1:
+          {
+            if (!mounted) {
+              return;
+            }
+            Utils().flutterToast("Internal error occured!", context);
+            debugPrint("file opening error in transfer history");
+          }
+          break;
+        case -6:
+          {
+            debugPrint("incorrect arguments in transfer history!");
+          }
+        default:
+          {
+            debugPrint("Error in transfer history function cpp");
+            Utils().flutterToast("Unexpected error!", context);
+          }
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      debugPrint("Error in transfer history function cpp: $e");
       Utils().flutterToast("Unexpected error while processing!", context);
     }
   }
