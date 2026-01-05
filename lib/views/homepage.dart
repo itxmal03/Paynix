@@ -1903,6 +1903,13 @@ class _HomepageState extends State<Homepage> {
         case 0:
           {
             debugPrint("Added Balance Successfully!");
+            await addBalanceHistory(
+              uid,
+              selectedCurrencyToAdd!,
+              amount,
+              tidController.text.trim(),
+              selectedMethod!,
+            );
           }
           break;
         case 1:
@@ -2056,6 +2063,58 @@ class _HomepageState extends State<Homepage> {
         return;
       }
       debugPrint("Error in billpayment function $e");
+      Utils().flutterToast("Unexpected error while processing!", context);
+    }
+  }
+
+  Future<void> addBalanceHistory(
+    String uid,
+    String blanceType,
+    String amount,
+    String method,
+    String tID,
+  ) async {
+    try {
+      final history = await Process.run("addBalanceHistory.exe", [
+        uid,
+        blanceType,
+        amount,
+        method,
+        tID,
+      ], workingDirectory: Directory.current.path);
+      int decide = history.exitCode;
+      switch (decide) {
+        case 0:
+          {
+            debugPrint("Added blanance add history sucessfully!");
+            await Future.delayed(Duration(seconds: 1));
+            await currentUser();
+          }
+          break;
+        case -1:
+          {
+            if (!mounted) {
+              return;
+            }
+            Utils().flutterToast("Internal error occured!", context);
+            debugPrint("file opening error in addblnc history");
+          }
+          break;
+        case -6:
+          {
+            debugPrint("incorrect arguments!");
+          }
+        default:
+          {
+            debugPrint("Error in add balance history function cpp");
+            Utils().flutterToast("Unexpected error", context);
+          }
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      debugPrint("Error in  add balance history function cpp: $e");
       Utils().flutterToast("Unexpected error while processing!", context);
     }
   }
