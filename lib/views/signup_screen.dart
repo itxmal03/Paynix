@@ -187,7 +187,7 @@ class _SignUpScreen extends State<SignUpScreen> {
                                 if (p0 == null || p0.isEmpty) {
                                   return 'Re-enter Password';
                                 }
-                                if (p0 != passwordController.text) {
+                                if (p0 != passwordController.text.trim()) {
                                   return "Password does'n match";
                                 }
                                 return null;
@@ -240,10 +240,10 @@ class _SignUpScreen extends State<SignUpScreen> {
                                   });
                                   await Future.delayed(Duration(seconds: 3));
                                   await signup(
-                                    nameContoller.text,
-                                    emailController.text.trim(),
-                                    passwordController.text,
-                                    confirmPasswordController.text,
+                                    nameContoller.text.trim(),
+                                    emailController.text.trim().trim(),
+                                    passwordController.text.trim(),
+                                    confirmPasswordController.text.trim(),
                                   );
                                   isLoading = false;
                                 },

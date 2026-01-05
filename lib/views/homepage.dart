@@ -28,6 +28,7 @@ class _HomepageState extends State<Homepage> {
   TextEditingController receiverName = TextEditingController();
   TextEditingController amountToSend = TextEditingController();
   TextEditingController billConsumerNo = TextEditingController();
+  TextEditingController billConsumerName = TextEditingController();
   TextEditingController billAmountController = TextEditingController();
 
   FocusNode buttonFocus = FocusNode();
@@ -37,6 +38,9 @@ class _HomepageState extends State<Homepage> {
   FocusNode amountToSendFocus = FocusNode();
   FocusNode withrawButtonFocus = FocusNode();
   FocusNode moneyFocus = FocusNode();
+  FocusNode consumerNameFocus = FocusNode();
+  FocusNode consumerIDFocus = FocusNode();
+  FocusNode billAmountFocus = FocusNode();
 
   final _key = GlobalKey<FormState>();
   final _key2 = GlobalKey<FormState>();
@@ -95,6 +99,32 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     currentUser();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    moneyController.dispose();
+    tidController.dispose();
+    swapAmountController.dispose();
+    receiverNumber.dispose();
+    receiverName.dispose();
+    amountToSend.dispose();
+    billConsumerNo.dispose();
+    billConsumerName.dispose();
+    billAmountController.dispose();
+
+    buttonFocus.dispose();
+    tidFocus.dispose();
+    receiverNameFocus.dispose();
+    receiverNumberFocus.dispose();
+    amountToSendFocus.dispose();
+    withrawButtonFocus.dispose();
+    moneyFocus.dispose();
+    consumerNameFocus.dispose();
+    consumerIDFocus.dispose();
+    billAmountFocus.dispose();
+
+    super.dispose();
   }
 
   @override
@@ -436,7 +466,27 @@ class _HomepageState extends State<Homepage> {
                   ),
                   SizedBox(height: 10),
                   form.signInTf(
+                    focus: consumerNameFocus,
+                    onsubmitted: (p0) {
+                      FocusScope.of(context).requestFocus(consumerIDFocus);
+                    },
+                    controller: billConsumerName,
+                    icon: Icon(Icons.numbers),
+                    hint: "Enter Consumer Name",
+                    validator: (p0) {
+                      if (p0 == null || p0.isEmpty) {
+                        return "Consumer name is required!";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  form.signInTf(
                     controller: billConsumerNo,
+                    focus: consumerIDFocus,
+                    onsubmitted: (p0) {
+                      FocusScope.of(context).requestFocus(billAmountFocus);
+                    },
                     icon: Icon(Icons.numbers),
                     hint: "Enter Consumer ID",
                     validator: (p0) {
@@ -449,11 +499,19 @@ class _HomepageState extends State<Homepage> {
                   SizedBox(height: 10),
                   form.signInTf(
                     controller: billAmountController,
+                    focus: billAmountFocus,
+                    onsubmitted: (p0) {
+                      FocusScope.of(context).unfocus();
+                    },
                     icon: Icon(Icons.money),
                     hint: "Enter amount to be paid",
                     validator: (p0) {
                       if (p0 == null || p0.isEmpty) {
                         return "Amount is required!";
+                      }
+                      double maxLimit = double.tryParse(p0) ?? 0;
+                      if (maxLimit > 100000000) {
+                        return "Max allowed limit is 100000000 PKR";
                       }
                       return null;
                     },
@@ -469,15 +527,128 @@ class _HomepageState extends State<Homepage> {
                         return;
                       }
                       Navigator.pop(context);
-                      Utils().flutterToast("Bill Paid Successfully!", context);
-                      billConsumerNo.clear();
-                      selectedBill = null;
-                      selectedSP = null;
+                      double bAmount =
+                          double.tryParse(billAmountController.text.trim()) ??
+                          0;
+                      if (bAmount > totalPkrBalance) {
+                        Utils().flutterToast(
+                          "Insufficient PKR balance!",
+                          context,
+                        );
+                        return;
+                      }
+                      billStats(bAmount);
+                      billPaymentConfirmation();
                     },
                   ),
                 ],
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void billStats(double billAmount) {
+    remainingBalance = totalPkrBalance - billAmount;
+    setState(() {
+      remainingBalance = remainingBalance;
+    });
+  }
+
+  void billPaymentConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Center(
+            child: Text("Stats", style: TextStyle(fontWeight: FontWeight.w500)),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Consumer Name:"),
+                  Text(billConsumerName.text.trim()),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Consumer ID:"),
+                  Text(billConsumerNo.text.trim()),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Bill Type:"),
+                  Text("$selectedBill-$selectedSP"),
+                ],
+              ),
+              SizedBox(height: 5),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [Text("Payment fee:"), Text("0.00")],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Amount to pay:"),
+                  Text(billAmountController.text.trim()),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Remaining Balance:${"PKR"}"),
+                  Text("$remainingBalance"),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Cancel", style: TextStyle(color: Colors.blue)),
+                  ),
+                  form.button(
+                    text: Text(
+                      "Confirm",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      Utils().flutterToast("Bill Paid Successfully!", context);
+                      await Future.delayed(Duration(seconds: 1));
+                      await payBill(
+                        userID.toString(),
+                        billAmountController.text.trim(),
+                      );
+                      await currentUser();
+                      setState(() {
+                        selectedSP = null;
+                        billAmountController.clear();
+                        billConsumerName.clear();
+                        billConsumerNo.clear();
+                        selectedBill = null;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -633,8 +804,8 @@ class _HomepageState extends State<Homepage> {
                           ? "Paynix UID is required!"
                           : "Account number is required!";
                     }
-                    if ((selectedMethod == "Paynix") &&
-                        (p0.length < 4 || p0.length > 4)) {
+                    if ((selectedReceiverMethod == "Paynix") &&
+                        (p0.length < 3)) {
                       return "Paynix UID must be greater than 3 characters!";
                     }
                     return null;
@@ -673,7 +844,7 @@ class _HomepageState extends State<Homepage> {
                     }
                     double maxLimit = double.tryParse(p0) ?? 0;
                     if (maxLimit > 100000000) {
-                      return "Max allowed limit is 100000000${selectedMethod == "PKR" ? "PKR" : "\$"}";
+                      return "Max allowed limit is 100000000${selectedCurrencyToSend == " PKR" ? " \$" : "\$"}";
                     }
                     return null;
                   },
@@ -704,7 +875,8 @@ class _HomepageState extends State<Homepage> {
                       );
                     } else {
                       double totalB = 0;
-                      double amount = double.tryParse(amountToSend.text) ?? 0;
+                      double amount =
+                          double.tryParse(amountToSend.text.trim()) ?? 0;
                       if (selectedCurrencyToSend == "PKR") {
                         totalB = totalPkrBalance;
                       } else {
@@ -730,8 +902,8 @@ class _HomepageState extends State<Homepage> {
   }
 
   double transferFeeDeduction() {
-    double amount = double.tryParse(amountToSend.text) ?? 0;
-    if (selectedExchangeCurrency == "PKR") {
+    double amount = double.tryParse(amountToSend.text.trim()) ?? 0;
+    if (selectedCurrencyToSend == "PKR") {
       if (amount < 5000) {
         transferFee = 0;
       } else if (amount < 10000) {
@@ -777,8 +949,7 @@ class _HomepageState extends State<Homepage> {
       remainingBalance = totalBalance - (amountToSend + transferFee);
     }
     setState(() {
-      remainingBalance;
-      exchangedAmount;
+      remainingBalance = remainingBalance;
     });
   }
 
@@ -795,14 +966,17 @@ class _HomepageState extends State<Homepage> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [Text("Receiver Name:"), Text(receiverName.text)],
+                children: [
+                  Text("Receiver Name:"),
+                  Text(receiverName.text.trim()),
+                ],
               ),
               SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text("Receiver Number/UID:"),
-                  Text(receiverNumber.text),
+                  Text(receiverNumber.text.trim()),
                 ],
               ),
               SizedBox(height: 5),
@@ -815,7 +989,7 @@ class _HomepageState extends State<Homepage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text("Amount to transfer:"),
-                  Text(amountToSend.text),
+                  Text(amountToSend.text.trim()),
                 ],
               ),
               SizedBox(height: 5),
@@ -849,7 +1023,7 @@ class _HomepageState extends State<Homepage> {
                         "Amount Sent Successfully!",
                         context,
                       );
-                      Future.delayed(Duration(seconds: 1));
+                      await Future.delayed(Duration(seconds: 1));
                       int balType = 0;
                       if (selectedCurrencyToSend == "PKR") {
                         balType = 1;
@@ -859,7 +1033,7 @@ class _HomepageState extends State<Homepage> {
                       await transferMoney(
                         userID.toString(),
                         balType.toString(),
-                        amountToSend.text,
+                        amountToSend.text.trim(),
                       );
                       await currentUser();
                       setState(() {
@@ -977,7 +1151,7 @@ class _HomepageState extends State<Homepage> {
                     }
                     double totalB = 0;
                     double amount =
-                        double.tryParse(swapAmountController.text) ?? 0;
+                        double.tryParse(swapAmountController.text.trim()) ?? 0;
                     if (selectedExchangeCurrency == "PKR") {
                       totalB = totalPkrBalance;
                     } else {
@@ -1061,7 +1235,7 @@ class _HomepageState extends State<Homepage> {
                         "Amount exchanged Successfully!",
                         context,
                       );
-                      Future.delayed(Duration(seconds: 1));
+                      await Future.delayed(Duration(seconds: 1));
                       int balType = 0;
                       if (selectedExchangeCurrency == "PKR") {
                         balType = 1;
@@ -1071,7 +1245,7 @@ class _HomepageState extends State<Homepage> {
                       await exchangeMoney(
                         userID.toString(),
                         balType.toString(),
-                        swapAmountController.text.trim(),
+                        swapAmountController.text.trim().trim(),
                       );
                       await currentUser();
                       setState(() {
@@ -1098,13 +1272,13 @@ class _HomepageState extends State<Homepage> {
       exchangedAmount = amountToExchange * perUSDpkr;
     }
     setState(() {
-      remainingBalance;
-      exchangedAmount;
+      remainingBalance = remainingBalance;
+      exchangedAmount = exchangedAmount;
     });
   }
 
   double gasFeeDeduction() {
-    double amount = double.tryParse(swapAmountController.text) ?? 0;
+    double amount = double.tryParse(swapAmountController.text.trim()) ?? 0;
     if (selectedExchangeCurrency == "PKR") {
       if (amount < 5000) {
         gasFee = 50;
@@ -1314,10 +1488,9 @@ class _HomepageState extends State<Homepage> {
                     if (!_key.currentState!.validate()) {
                       return;
                     }
-                    if ((selectedCurrencyToAdd == "USD" &&
-                            selectedMethod != "Binance") &&
-                        (selectedCurrencyToAdd == "USD" &&
-                            selectedMethod != "Paynix")) {
+                    if (selectedCurrencyToAdd == "USD" &&
+                        selectedMethod != "Binance" &&
+                        selectedMethod != "Paynix") {
                       Navigator.pop(context);
                       Utils().flutterToast(
                         "USD Transaction can't be done except Binance Method!",
@@ -1341,7 +1514,7 @@ class _HomepageState extends State<Homepage> {
                         await addMoney(
                           userID.toString(),
                           2.toString(),
-                          moneyController.text,
+                          moneyController.text.trim(),
                         );
                         await currentUser();
                       } else {
@@ -1349,15 +1522,17 @@ class _HomepageState extends State<Homepage> {
                         await addMoney(
                           userID.toString(),
                           1.toString(),
-                          moneyController.text,
+                          moneyController.text.trim(),
                         );
                         await currentUser();
                       }
                     }
-                    moneyController.clear();
-                    tidController.clear();
-                    selectedMethod = null;
-                    selectedCurrencyToAdd = null;
+                    setState(() {
+                      moneyController.clear();
+                      tidController.clear();
+                      selectedMethod = null;
+                      selectedCurrencyToAdd = null;
+                    });
                   },
                 ),
               ],
@@ -1836,6 +2011,52 @@ class _HomepageState extends State<Homepage> {
       }
     } catch (e) {
       debugPrint("Error in transfer money function $e");
+    }
+  }
+
+  Future<void> payBill(String uid, String amount) async {
+    try {
+      final resultx = await Process.run("bill_payments.exe", [
+        uid,
+        amount,
+      ], workingDirectory: Directory.current.path);
+      int decide = resultx.exitCode;
+      debugPrint("billPayment decide code: $decide");
+      switch (decide) {
+        case 0:
+          {
+            debugPrint("bill paid sucessfully!");
+            await Future.delayed(Duration(seconds: 1));
+            await currentUser();
+          }
+          break;
+        case -7:
+          {
+            if (!mounted) {
+              return;
+            }
+            Utils().flutterToast(
+              "Insufficient Balance for this action!",
+              context,
+            );
+          }
+          break;
+        case -1:
+          {
+            debugPrint("File opening error in bill payment funtion!");
+          }
+        default:
+          {
+            debugPrint("Error in bill payment function cpp");
+            Utils().flutterToast("Unexpected error", context);
+          }
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      debugPrint("Error in billpayment function $e");
+      Utils().flutterToast("Unexpected error while processing!", context);
     }
   }
 }

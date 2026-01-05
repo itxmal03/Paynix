@@ -175,8 +175,8 @@ class _SignInScreen extends State<SignInScreen> {
                                 });
                                 await Future.delayed(Duration(seconds: 3));
                                 await signin(
-                                  emailController.text.trim(),
-                                  passwordController.text.trim(),
+                                  emailController.text.trim().trim(),
+                                  passwordController.text.trim().trim(),
                                 );
                                 isLoading = false;
                               },
