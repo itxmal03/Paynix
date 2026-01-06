@@ -1,27 +1,24 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 class TransactionsHistory extends StatefulWidget {
-  const TransactionsHistory({super.key});
+  final String userID;
+  const TransactionsHistory({super.key, required this.userID});
 
   @override
   State<TransactionsHistory> createState() => _TransactionsHistoryState();
 }
 
 class _TransactionsHistoryState extends State<TransactionsHistory> {
-  List<Map<String, dynamic>> transaction = [
-    {
-      "action": "Added Money",
-      "amount": "1200",
-      "date": "13 Dec 2025",
-      "color": Colors.green,
-    },
-    {
-      "action": "Withdraw",
-      "amount": "500",
-      "date": "12 Dec 2025",
-      "color": Colors.red,
-    },
-  ];
+  List<Map<String, dynamic>> transactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // displayAddBalanceHistory();
+    displayExchangeHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +57,7 @@ class _TransactionsHistoryState extends State<TransactionsHistory> {
       body: Column(
         children: [
           Expanded(
-            child: transaction.isEmpty
+            child: transactions.isEmpty
                 ? Center(
                     child: Text(
                       "No Transaction yet!",
@@ -68,13 +65,14 @@ class _TransactionsHistoryState extends State<TransactionsHistory> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: transaction.length,
+                    itemCount: transactions.length,
                     itemBuilder: (context, index) {
                       return transactionItem(
-                        transaction[index]["action"],
-                        transaction[index]["amount"],
-                        transaction[index]["date"],
-                        transaction[index]["color"],
+                        transactions[index]["action"],
+                        transactions[index]["currency"],
+                        transactions[index]["amount"],
+                        transactions[index]["time"],
+                        transactions[index]["color"],
                       );
                     },
                   ),
@@ -83,9 +81,130 @@ class _TransactionsHistoryState extends State<TransactionsHistory> {
       ),
     );
   }
+
+  Future<void> displayAddBalanceHistory() async {
+    try {
+      final result = await Process.run("displayAddBalanceHistory.exe", [
+        widget.userID.trim(),
+      ], workingDirectory: Directory.current.path);
+
+      final output = result.stdout.toString().trim();
+      if (output.isEmpty) return;
+
+      final lines = output.split('\n');
+
+      final List<Map<String, dynamic>> temp = [];
+
+      for (final line in lines) {
+        final parts = line.split('|');
+
+        if (parts.length < 6) continue;
+
+        temp.add({
+          "action": "Added Money",
+          "uid": parts[0],
+          "currency": parts[1],
+          "amount": parts[2],
+          "method": parts[3],
+          "tid": parts[4],
+          "time": parts[5],
+          "color": Colors.green,
+        });
+      }
+      setState(() {
+        transactions = temp;
+      });
+    } catch (e) {
+      debugPrint("Error displaying add balance history: $e");
+    }
+  }
+
+  Future<void> displayExchangeHistory() async {
+    try {
+      final result = await Process.run("displayExchangeHistory.exe", [
+        widget.userID.trim(),
+      ], workingDirectory: Directory.current.path);
+
+      final output = result.stdout.toString().trim();
+      if (output.isEmpty) return;
+
+      final lines = output.split('\n');
+
+      final List<Map<String, dynamic>> temp = [];
+
+      for (final line in lines) {
+        final parts = line.split('|');
+
+        if (parts.length < 4) continue;
+
+        temp.add({
+          "action": "Exchanged Money",
+          "uid": parts[0],
+          "currency": parts[1],
+          "amount": parts[2],
+          "time": parts[3],
+          "color": Colors.blue,
+        });
+      }
+      setState(() {
+        transactions = temp;
+      });
+    } catch (e) {
+      debugPrint("Error displaying exchange history: $e");
+    }
+  }
 }
 
-Widget transactionItem(String title, String amount, String date, Color color) {
+// Widget transactionItem(
+//   String title,
+//   String currency,
+//   String method,
+//   String tid,
+//   String amount,
+//   String date,
+//   Color color,
+// ) {
+//   return Card(
+//     elevation: 2,
+//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+//     child: ListTile(
+//       leading: CircleAvatar(
+//         backgroundColor: color.withValues(alpha: 200),
+//         child: Icon(Icons.account_balance_wallet, color: color),
+//       ),
+//       title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
+//       subtitle: Row(
+//         children: [
+//           Text(currency),
+//           SizedBox(width: 10),
+//           Text(method),
+//           SizedBox(width: 10),
+//           Text(tid),
+//           SizedBox(width: 10),
+//           Text(amount),
+//           SizedBox(width: 10),
+//           Text(date),
+//         ],
+//       ),
+//       trailing: Text(
+//         amount,
+//         style: TextStyle(
+//           color: color,
+//           fontWeight: FontWeight.bold,
+//           fontSize: 16,
+//         ),
+//       ),
+//     ),
+//   );
+// }
+
+Widget transactionItem(
+  String title,
+  String currency,
+  String amount,
+  String date,
+  Color color,
+) {
   return Card(
     elevation: 2,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -95,7 +214,17 @@ Widget transactionItem(String title, String amount, String date, Color color) {
         child: Icon(Icons.account_balance_wallet, color: color),
       ),
       title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(date),
+      subtitle: Row(
+        children: [
+          Text("Exchanged Currency: $currency"),
+          SizedBox(width: 10),
+          SizedBox(width: 10),
+          SizedBox(width: 10),
+          Text("Exchanged Amount: $amount"),
+          SizedBox(width: 10),
+          Text(date),
+        ],
+      ),
       trailing: Text(
         amount,
         style: TextStyle(

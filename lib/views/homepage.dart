@@ -264,7 +264,8 @@ class _HomepageState extends State<Homepage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TransactionsHistory(),
+                        builder: (context) =>
+                            TransactionsHistory(userID: userID.toString()),
                       ),
                     );
                   },

@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int arguments, char *arg[])
 {
-    if (arguments == 3)
+    if (arguments == 3)   
     {
         int userID = stoi(arg[1]);
         double toBePaid = stod(arg[2]);
@@ -22,7 +22,7 @@ int main(int arguments, char *arg[])
                 linesV.push_back(line);
             }
 
-            for (string &x : linesV)
+            for (string &x : linesV)   
             {
                 int uid;
                 char separator;
