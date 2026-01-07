@@ -29,7 +29,7 @@ int main(int arguments, char *arg[])
         addBalanceFile.open("addBalanceHistory.txt", ios::app);
         if (addBalanceFile.is_open())
         {
-            addBalanceFile << userID << '|' << balanceType << '|' << balanceToAdd << '|' << tid << '|' << method << '|' << time << endl;
+            addBalanceFile << userID << '|' << balanceType << '|' << fixed << setprecision(0) << balanceToAdd << '|' << tid << '|' << method << '|' << time << endl;
             addBalanceFile.close();
         }
         else

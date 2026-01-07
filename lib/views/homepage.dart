@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:pf_project/core/utils.dart';
+import 'package:pf_project/models/transaction_model.dart';
 import 'package:pf_project/viewmodels/theme_viewmodel.dart';
+import 'package:pf_project/viewmodels/transactions_viewmodel.dart';
 import 'package:pf_project/views/SignIn_screen.dart';
 import 'package:pf_project/views/about_app.dart';
 import 'package:pf_project/views/contact_us.dart';
@@ -95,10 +97,21 @@ class _HomepageState extends State<Homepage> {
   double perPKRusd = 0.0036;
   double transferFee = 0;
 
+  Map<String, double> dailyAmounts = {
+    "01-Jan": 500,
+    "02-Jan": 200,
+    "03-Jan": 750,
+    "04-Jan": 300,
+    "05-Jan": 1000,
+  };
+
   @override
   void initState() {
-    currentUser();
     super.initState();
+    currentUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionsViewModel>().initialize();
+    });
   }
 
   @override
@@ -260,12 +273,18 @@ class _HomepageState extends State<Homepage> {
                   ),
                 ),
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
+                    await Provider.of<TransactionsViewModel>(
+                      context,
+                      listen: false,
+                    ).initialize();
+                    if (!mounted) {
+                      return;
+                    }
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            TransactionsHistory(userID: userID.toString()),
+                        builder: (context) => TransactionsHistory(),
                       ),
                     );
                   },
@@ -280,52 +299,91 @@ class _HomepageState extends State<Homepage> {
 
             SizedBox(height: 35),
             Text(
-              "Account Overview",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            SizedBox(height: 15),
-            Row(
-              children: [
-                Expanded(
-                  child: smallInfoCard(
-                    "Deposits",
-                    "PKR 0",
-                    "USD 0",
-                    Icons.arrow_upward,
-                    Colors.green,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: smallInfoCard(
-                    "Withdrawals",
-                    "PKR 0",
-                    "USD 0",
-                    Icons.arrow_downward,
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Text(
               "Recent Transactions",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
+
             SizedBox(height: 15),
-            transactionItem(
-              "Added Money",
-              "+5000",
-              "11 Jan 2025",
-              Colors.green,
+            Consumer<TransactionsViewModel>(
+              builder: (context, txVM, _) {
+                if (txVM.latestThree.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text(
+                        "No recent transactions",
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  );
+                }
+                return Column(
+                  children: txVM.latestThree
+                      .map((tx) => transactionItem(tx))
+                      .toList(),
+                );
+              },
             ),
-            transactionItem("Withdrawal", "-1200", "10 Jan 2025", Colors.red),
-            transactionItem("Transfer", "-2000", "09 Jan 2025", Colors.blue),
+
             SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  Widget transactionItem(TransactionModel tx) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: tx.color.withValues(alpha: 200),
+          child: Icon(Icons.account_balance_wallet, color: tx.color),
+        ),
+        title: Text(
+          tx.title,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: _buildSubtitle(tx),
+        trailing: Text(
+          tx.amount,
+          style: TextStyle(
+            color: tx.color,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtitle(TransactionModel tx) {
+    switch (tx.type) {
+      case TransactionType.bill:
+        return Text(
+          "${tx.details["billType"]} • ${tx.details["provider"]}\n"
+          "Consumer: ${tx.details["consumerNo"]}\n"
+          "Time: ${tx.time}",
+        );
+
+      case TransactionType.transfer:
+        return Text(
+          "To: ${tx.details["name"]} \n"
+          "Method: ${tx.details["method"]}\t Account No/UID: ${tx.details["account"]}\n"
+          "Time: ${tx.time}",
+        );
+
+      case TransactionType.exchange:
+        return Text("Currency: ${tx.details["currency"]}\nTime: ${tx.time}");
+
+      case TransactionType.addBalance:
+        return Text(
+          "Method: ${tx.details["method"]}\n"
+          "Transaction ID: ${tx.details["transactionId"]}\n"
+          "Time: ${tx.time}",
+        );
+    }
   }
 
   void billPaymentsCard() {
@@ -855,6 +913,7 @@ class _HomepageState extends State<Homepage> {
                     if (maxLimit > 100000000) {
                       return "Max allowed limit is 100000000${selectedCurrencyToSend == " PKR" ? " \$" : "\$"}";
                     }
+
                     return null;
                   },
                 ),
@@ -884,19 +943,35 @@ class _HomepageState extends State<Homepage> {
                       );
                     } else {
                       double totalB = 0;
-                      double amount =
-                          double.tryParse(amountToSend.text.trim()) ?? 0;
                       if (selectedCurrencyToSend == "PKR") {
                         totalB = totalPkrBalance;
-                      } else {
+                      }
+                      if (selectedCurrencyToSend == "USD") {
                         totalB = totalUsdBalance;
                       }
-                      transferFeeDeduction();
+                      double amount =
+                          double.tryParse(amountToSend.text.trim()) ?? 0;
+                      double fee = calculateTransferFee(
+                        selectedCurrencyToSend!,
+                        amount,
+                      );
                       transferStats(
                         selectedCurrencyToSend.toString(),
                         totalB,
                         amount,
                       );
+                      if ((fee + amount > totalPkrBalance) &&
+                          (selectedCurrencyToSend == "PKR")) {
+                        Utils().flutterToast("Insufficent balance", context);
+                        Navigator.pop(context);
+                        return;
+                      }
+                      if ((fee + amount > totalUsdBalance) &&
+                          (selectedCurrencyToSend == "USD")) {
+                        Utils().flutterToast("Insufficent balance", context);
+                        Navigator.pop(context);
+                        return;
+                      }
                       Navigator.pop(context);
                       transferConfirmation();
                     }
@@ -910,56 +985,37 @@ class _HomepageState extends State<Homepage> {
     );
   }
 
-  double transferFeeDeduction() {
-    double amount = double.tryParse(amountToSend.text.trim()) ?? 0;
-    if (selectedCurrencyToSend == "PKR") {
-      if (amount < 5000) {
-        transferFee = 0;
-      } else if (amount < 10000) {
-        transferFee = 10;
-      } else if (amount < 100000) {
-        transferFee = 100;
-      } else if (amount < 1000000) {
-        transferFee = 500;
-      } else if (amount < 10000000) {
-        transferFee = 1000;
-      } else if (amount < 100000000) {
-        transferFee = 2000;
-      }
-    } else {
-      if (amount < 50) {
-        transferFee = 0;
-      } else if (amount < 100) {
-        transferFee = 3;
-      } else if (amount < 100000) {
-        transferFee = 10;
-      } else if (amount < 1000000) {
-        transferFee = 50;
-      } else if (amount < 10000000) {
-        transferFee = 100;
-      } else if (amount < 100000000) {
-        transferFee = 200;
-      }
-    }
-    setState(() {
-      transferFee;
-    });
-    return transferFee;
-  }
-
   void transferStats(
     String balanceType,
     double totalBalance,
     double amountToSend,
   ) {
-    if (balanceType == "PKR") {
-      remainingBalance = totalBalance - (amountToSend + transferFee);
+    double fee = calculateTransferFee(balanceType, amountToSend);
+    if ((amountToSend + fee) > totalBalance) {
+      remainingBalance = totalBalance; // Kept previous balance
+      Utils().flutterToast("Insufficient balance", context);
     } else {
-      remainingBalance = totalBalance - (amountToSend + transferFee);
+      remainingBalance = totalBalance - (amountToSend + fee);
     }
-    setState(() {
-      remainingBalance = remainingBalance;
-    });
+    setState(() {});
+  }
+
+  double calculateTransferFee(String currency, double amount) {
+    if (currency == "PKR") {
+      if (amount < 5000) return 0;
+      if (amount < 10000) return 10;
+      if (amount < 100000) return 100;
+      if (amount < 1000000) return 500;
+      if (amount < 10000000) return 1000;
+      return 2000;
+    } else {
+      if (amount < 50) return 0;
+      if (amount < 100) return 3;
+      if (amount < 100000) return 10;
+      if (amount < 1000000) return 50;
+      if (amount < 10000000) return 100;
+      return 200;
+    }
   }
 
   void transferConfirmation() {
@@ -1154,6 +1210,14 @@ class _HomepageState extends State<Homepage> {
                     double maxLimit = double.tryParse(p0) ?? 0;
                     if (maxLimit > 100000000) {
                       return "Max allowed limit is 100000000${selectedMethod == "USD" ? "\$" : "PKR"}";
+                    }
+                    if (maxLimit >= totalPkrBalance &&
+                        (selectedExchangeCurrency == "PKR")) {
+                      return "Insufficient balance!";
+                    }
+                    if (maxLimit >= totalUsdBalance &&
+                        (selectedExchangeCurrency == "USD")) {
+                      return "Insufficient balance!";
                     }
 
                     return null;
@@ -1682,6 +1746,10 @@ class _HomepageState extends State<Homepage> {
               ),
             ),
             onTap: () async {
+              Provider.of<TransactionsViewModel>(
+                context,
+                listen: false,
+              ).reset();
               Provider.of<ThemeViewmodel>(
                 context,
                 listen: false,
@@ -1757,34 +1825,6 @@ class _HomepageState extends State<Homepage> {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget transactionItem(
-    String title,
-    String amount,
-    String date,
-    Color color,
-  ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 200),
-          child: Icon(Icons.account_balance_wallet, color: color),
-        ),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(date),
-        trailing: Text(
-          amount,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
         ),
       ),
     );
@@ -1932,6 +1972,10 @@ class _HomepageState extends State<Homepage> {
               tidController.text.trim(),
               selectedMethod!,
             );
+            if (!mounted) {
+              return;
+            }
+            await context.read<TransactionsViewModel>().refreshTransactions();
           }
           break;
         case 1:
@@ -1967,9 +2011,12 @@ class _HomepageState extends State<Homepage> {
       switch (decide) {
         case 0:
           {
+            await exchangeHistory(uid, amountType, amount);
             debugPrint("Exchanged money sucessfully!");
-            await Future.delayed(Duration(seconds: 1));
-            await currentUser();
+            if (!mounted) {
+              return;
+            }
+            await context.read<TransactionsViewModel>().refreshTransactions();
           }
           break;
         case -7:
@@ -2014,19 +2061,24 @@ class _HomepageState extends State<Homepage> {
         case 0:
           {
             debugPrint("transferred money sucessfully!");
-            await Future.delayed(Duration(seconds: 1));
-            await currentUser();
+            await transferHistory(
+              uid,
+              amountType,
+              selectedReceiverMethod!,
+              receiverNumber.text.trim(),
+              receiverName.text.trim(),
+              amount,
+            );
+            if (!mounted) {
+              return;
+            }
+            await context.read<TransactionsViewModel>().refreshTransactions();
           }
           break;
         case -7:
           {
-            if (!mounted) {
-              return;
-            }
-            Utils().flutterToast(
-              "Insufficient Balance for this action!",
-              context,
-            );
+            
+            debugPrint("insufficient balane");
           }
           break;
         case -1:
@@ -2055,8 +2107,18 @@ class _HomepageState extends State<Homepage> {
         case 0:
           {
             debugPrint("bill paid sucessfully!");
-            await Future.delayed(Duration(seconds: 1));
-            await currentUser();
+            await billPaymentHistory(
+              uid,
+              selectedBill!,
+              selectedSP!,
+              billConsumerName.text.toString(),
+              billConsumerNo.text.trim(),
+              amount,
+            );
+            if (!mounted) {
+              return;
+            }
+            await context.read<TransactionsViewModel>().refreshTransactions();
           }
           break;
         case -7:
@@ -2207,6 +2269,7 @@ class _HomepageState extends State<Homepage> {
         sentAmount,
       ], workingDirectory: Directory.current.path);
       int decide = history.exitCode;
+
       switch (decide) {
         case 0:
           {
@@ -2258,6 +2321,7 @@ class _HomepageState extends State<Homepage> {
         consumerID,
         paidAmount,
       ], workingDirectory: Directory.current.path);
+
       int decide = history.exitCode;
       switch (decide) {
         case 0:

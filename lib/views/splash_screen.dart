@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:pf_project/viewmodels/transactions_viewmodel.dart';
 import 'package:pf_project/views/homepage.dart';
 import 'package:pf_project/views/signin_screen.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,8 +18,10 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
-    checkUser();
     super.initState();
+    final txVM = Provider.of<TransactionsViewModel>(context, listen: false);
+    txVM.initialize();
+    checkUser();
   }
 
   @override

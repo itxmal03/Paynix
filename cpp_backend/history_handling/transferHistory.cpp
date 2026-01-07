@@ -30,7 +30,7 @@ int main(int arguments, char *arg[])
         transferHistoryFile.open("transferHistory.txt", ios::app);
         if (transferHistoryFile.is_open())
         {
-            transferHistoryFile << userID << '|' << transferredCurrency << '|' << method << '|' << accountNumber << '|' << accountHolderName << '|' << sentAmount << '|' << time << endl;
+            transferHistoryFile << userID << '|' << transferredCurrency << '|' << method << '|' << accountNumber << '|' << accountHolderName << '|' << fixed << setprecision(0) << sentAmount << '|' << time << endl;
             transferHistoryFile.close();
         }
         else

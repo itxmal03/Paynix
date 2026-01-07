@@ -27,7 +27,7 @@ int main(int arguments, char *arg[])
         exchangeHistoryFile.open("exchangeHistory.txt", ios::app);
         if (exchangeHistoryFile.is_open())
         {
-            exchangeHistoryFile << userID << '|' << toexchangeCurrency <<'|' << exchangedAmount << '|' << time << endl;
+            exchangeHistoryFile << userID << '|' << toexchangeCurrency << '|' << fixed << setprecision(0) << exchangedAmount << '|' << time << endl;
             exchangeHistoryFile.close();
         }
         else

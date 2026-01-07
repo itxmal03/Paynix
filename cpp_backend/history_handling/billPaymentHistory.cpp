@@ -30,7 +30,7 @@ int main(int arguments, char *arg[])
         billPaymentHistoryFile.open("billPaymentHistory.txt", ios::app);
         if (billPaymentHistoryFile.is_open())
         {
-            billPaymentHistoryFile << userID << '|' << billType << '|' << provider << '|' << consumerName << '|' << consumerID << '|' << paidAmount << '|' << time << endl;
+            billPaymentHistoryFile << userID << '|' << billType << '|' << provider << '|' << consumerName << '|' << consumerID << '|' <<fixed<<setprecision(0)<< paidAmount << '|' << time << endl;
             billPaymentHistoryFile.close();
         }
         else

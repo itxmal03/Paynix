@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pf_project/viewmodels/theme_viewmodel.dart';
+import 'package:pf_project/viewmodels/transactions_viewmodel.dart';
 import 'package:pf_project/views/splash_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeViewmodel()),
+        ChangeNotifierProvider(create: (context)=>TransactionsViewModel())
       ],
       child: const MainApp(),
     ),
