@@ -108,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> checkUser() async {
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 6));
     try {
       final result = await Process.run(
         "session_check.exe",
@@ -155,4 +155,6 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     }
   }
+
+
 }

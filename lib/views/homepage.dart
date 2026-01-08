@@ -572,6 +572,9 @@ class _HomepageState extends State<Homepage> {
                       if (maxLimit > 100000000) {
                         return "Max allowed limit is 100000000 PKR";
                       }
+                      if (!RegExp(r'^\d+$').hasMatch(p0)) {
+                        return "Only numeric digits are allowed";
+                      }
                       return null;
                     },
                   ),
@@ -913,7 +916,9 @@ class _HomepageState extends State<Homepage> {
                     if (maxLimit > 100000000) {
                       return "Max allowed limit is 100000000${selectedCurrencyToSend == " PKR" ? " \$" : "\$"}";
                     }
-
+                    if (!RegExp(r'^\d+$').hasMatch(p0)) {
+                      return "Only numeric digits are allowed";
+                    }
                     return null;
                   },
                 ),
@@ -1218,6 +1223,9 @@ class _HomepageState extends State<Homepage> {
                     if (maxLimit >= totalUsdBalance &&
                         (selectedExchangeCurrency == "USD")) {
                       return "Insufficient balance!";
+                    }
+                    if (!RegExp(r'^\d+$').hasMatch(p0)) {
+                      return "Only numeric digits are allowed";
                     }
 
                     return null;
@@ -1545,6 +1553,9 @@ class _HomepageState extends State<Homepage> {
                     double maxLimit = double.tryParse(p0) ?? 0;
                     if (maxLimit > 100000000) {
                       return "Max allowed limit is 100000000${selectedMethod == "USD" ? "\$" : "PKR"}";
+                    }
+                    if (!RegExp(r'^\d+$').hasMatch(p0)) {
+                      return "Only numeric digits are allowed";
                     }
                     return null;
                   },
@@ -2077,7 +2088,6 @@ class _HomepageState extends State<Homepage> {
           break;
         case -7:
           {
-            
             debugPrint("insufficient balane");
           }
           break;
